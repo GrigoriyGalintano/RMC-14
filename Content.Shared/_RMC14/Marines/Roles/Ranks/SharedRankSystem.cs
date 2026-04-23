@@ -52,8 +52,16 @@ public abstract class SharedRankSystem : EntitySystem
     public void SetRank(EntityUid uid, ProtoId<RankPrototype> from)
     {
         var comp = EnsureComp<RankComponent>(uid);
+        var oldRank = comp.Rank;
+
+        if (oldRank == from)
+            return;
+
         comp.Rank = from;
         Dirty(uid, comp);
+
+        var ev = new RankChangedEvent(uid, oldRank, from);
+        RaiseLocalEvent(uid, ref ev);
     }
 
     /// <summary>

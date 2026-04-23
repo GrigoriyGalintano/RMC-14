@@ -32,6 +32,7 @@
   name: Chief Inspector
   prefix: PvCI.
   paygrade: O5
+  rankPin: RMCRankPinProvostInspector
 
 # Any player with medium-low law understanding
 - type: rank
@@ -39,6 +40,7 @@
   name: Provost Inspector
   prefix: PvI.
   paygrade: O4
+  rankPin: RMCRankPinProvostInspector
 
 # Fax responder
 - type: rank

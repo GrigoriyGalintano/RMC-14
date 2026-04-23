@@ -46,4 +46,8 @@ public sealed partial class RankPrototype : IPrototype, IInheritingPrototype
     [AlwaysPushInheritance]
     [DataField]
     public string? Paygrade { get; set; }
+
+    [AlwaysPushInheritance]
+    [DataField]
+    public EntProtoId? RankPin { get; set; }
 }

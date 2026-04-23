@@ -10,6 +10,7 @@ using Content.Shared.Popups;
 using Content.Shared.Roles;
 using Content.Shared.Verbs;
 using Robust.Shared.Containers;
+using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.Network;
 using Robust.Shared.Utility;
 
@@ -236,6 +237,22 @@ public abstract class SharedUniformAccessorySystem : EntitySystem
         _container.Insert(accessory, container);
         _item.VisualsChanged(holder);
         return true;
+    }
+
+    public bool HolderAllowsCategory(EntityUid holder, string category, UniformAccessoryHolderComponent? holderComp = null)
+    {
+        return Resolve(holder, ref holderComp, false) &&
+               holderComp.AllowedCategories.Contains(category);
+    }
+
+    public bool TryGetHolderContainer(
+        EntityUid holder,
+        [NotNullWhen(true)] out BaseContainer? container,
+        UniformAccessoryHolderComponent? holderComp = null)
+    {
+        container = null;
+        return Resolve(holder, ref holderComp, false) &&
+               _container.TryGetContainer(holder, holderComp.ContainerId, out container);
     }
 
     public bool BelongsToUser(NetEntity user, EntityUid target)

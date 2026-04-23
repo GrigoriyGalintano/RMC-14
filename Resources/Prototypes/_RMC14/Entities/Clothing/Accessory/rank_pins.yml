@@ -1,0 +1,375 @@
+- type: entity
+  abstract: true
+  parent: RMCBaseUniformAccessory
+  id: RMCBaseRankPin
+  name: rank pin
+  description: A military rank insignia pin.
+  components:
+  - type: UniformAccessory
+    category: Rank
+    limit: 1
+    hiddenByJacketRolling: true
+
+- type: entity
+  parent: RMCBaseRankPin
+  id: RMCRankPinMarineE1
+  name: private rank pin
+  components:
+  - type: Sprite
+    sprite: _RMC14/Objects/Clothing/Accessory/Rank/UNMC/marine_e1.rsi
+    state: icon
+  - type: UniformAccessory
+    playerSprite:
+      sprite: _RMC14/Objects/Clothing/Accessory/Rank/UNMC/marine_e1.rsi
+      state: equipped
+
+- type: entity
+  parent: RMCBaseRankPin
+  id: RMCRankPinMarineE2
+  name: private first class rank pin
+  components:
+  - type: Sprite
+    sprite: _RMC14/Objects/Clothing/Accessory/Rank/UNMC/marine_e2.rsi
+    state: icon
+  - type: UniformAccessory
+    playerSprite:
+      sprite: _RMC14/Objects/Clothing/Accessory/Rank/UNMC/marine_e2.rsi
+      state: equipped
+
+- type: entity
+  parent: RMCBaseRankPin
+  id: RMCRankPinMarineE3
+  name: lance corporal rank pin
+  components:
+  - type: Sprite
+    sprite: _RMC14/Objects/Clothing/Accessory/Rank/UNMC/marine_e3.rsi
+    state: icon
+  - type: UniformAccessory
+    playerSprite:
+      sprite: _RMC14/Objects/Clothing/Accessory/Rank/UNMC/marine_e3.rsi
+      state: equipped
+
+- type: entity
+  parent: RMCBaseRankPin
+  id: RMCRankPinMarineE4
+  name: corporal rank pin
+  components:
+  - type: Sprite
+    sprite: _RMC14/Objects/Clothing/Accessory/Rank/UNMC/marine_e4.rsi
+    state: icon
+  - type: UniformAccessory
+    playerSprite:
+      sprite: _RMC14/Objects/Clothing/Accessory/Rank/UNMC/marine_e4.rsi
+      state: equipped
+
+- type: entity
+  parent: RMCBaseRankPin
+  id: RMCRankPinMarineE5
+  name: sergeant rank pin
+  components:
+  - type: Sprite
+    sprite: _RMC14/Objects/Clothing/Accessory/Rank/UNMC/marine_e5.rsi
+    state: icon
+  - type: UniformAccessory
+    playerSprite:
+      sprite: _RMC14/Objects/Clothing/Accessory/Rank/UNMC/marine_e5.rsi
+      state: equipped
+
+- type: entity
+  parent: RMCBaseRankPin
+  id: RMCRankPinMarineE6
+  name: staff sergeant rank pin
+  components:
+  - type: Sprite
+    sprite: _RMC14/Objects/Clothing/Accessory/Rank/UNMC/marine_e6.rsi
+    state: icon
+  - type: UniformAccessory
+    playerSprite:
+      sprite: _RMC14/Objects/Clothing/Accessory/Rank/UNMC/marine_e6.rsi
+      state: equipped
+
+- type: entity
+  parent: RMCBaseRankPin
+  id: RMCRankPinMarineE7
+  name: gunnery sergeant rank pin
+  components:
+  - type: Sprite
+    sprite: _RMC14/Objects/Clothing/Accessory/Rank/UNMC/marine_e7.rsi
+    state: icon
+  - type: UniformAccessory
+    playerSprite:
+      sprite: _RMC14/Objects/Clothing/Accessory/Rank/UNMC/marine_e7.rsi
+      state: equipped
+
+- type: entity
+  parent: RMCBaseRankPin
+  id: RMCRankPinMarineE8
+  name: master sergeant rank pin
+  components:
+  - type: Sprite
+    sprite: _RMC14/Objects/Clothing/Accessory/Rank/UNMC/marine_e8.rsi
+    state: icon
+  - type: UniformAccessory
+    playerSprite:
+      sprite: _RMC14/Objects/Clothing/Accessory/Rank/UNMC/marine_e8.rsi
+      state: equipped
+
+- type: entity
+  parent: RMCBaseRankPin
+  id: RMCRankPinMarineE9
+  name: sergeant major rank pin
+  components:
+  - type: Sprite
+    sprite: _RMC14/Objects/Clothing/Accessory/Rank/UNMC/marine_e9.rsi
+    state: icon
+  - type: UniformAccessory
+    playerSprite:
+      sprite: _RMC14/Objects/Clothing/Accessory/Rank/UNMC/marine_e9.rsi
+      state: equipped
+
+- type: entity
+  parent: RMCBaseRankPin
+  id: RMCRankPinMarineWarrant
+  name: warrant officer rank pin
+  components:
+  - type: Sprite
+    sprite: _RMC14/Objects/Clothing/Accessory/Rank/UNMC/marine_warrant.rsi
+    state: icon
+  - type: UniformAccessory
+    playerSprite:
+      sprite: _RMC14/Objects/Clothing/Accessory/Rank/UNMC/marine_warrant.rsi
+      state: equipped
+
+- type: entity
+  parent: RMCBaseRankPin
+  id: RMCRankPinMarineChiefWarrant
+  name: chief warrant officer rank pin
+  components:
+  - type: Sprite
+    sprite: _RMC14/Objects/Clothing/Accessory/Rank/UNMC/marine_chief_warrant.rsi
+    state: icon
+  - type: UniformAccessory
+    playerSprite:
+      sprite: _RMC14/Objects/Clothing/Accessory/Rank/UNMC/marine_chief_warrant.rsi
+      state: equipped
+
+- type: entity
+  parent: RMCBaseRankPin
+  id: RMCRankPinMarineO1
+  name: second lieutenant rank pin
+  components:
+  - type: Sprite
+    sprite: _RMC14/Objects/Clothing/Accessory/Rank/UNMC/marine_o1.rsi
+    state: icon
+  - type: UniformAccessory
+    playerSprite:
+      sprite: _RMC14/Objects/Clothing/Accessory/Rank/UNMC/marine_o1.rsi
+      state: equipped
+
+- type: entity
+  parent: RMCBaseRankPin
+  id: RMCRankPinMarineO2
+  name: first lieutenant rank pin
+  components:
+  - type: Sprite
+    sprite: _RMC14/Objects/Clothing/Accessory/Rank/UNMC/marine_o2.rsi
+    state: icon
+  - type: UniformAccessory
+    playerSprite:
+      sprite: _RMC14/Objects/Clothing/Accessory/Rank/UNMC/marine_o2.rsi
+      state: equipped
+
+- type: entity
+  parent: RMCBaseRankPin
+  id: RMCRankPinMarineO3
+  name: captain rank pin
+  components:
+  - type: Sprite
+    sprite: _RMC14/Objects/Clothing/Accessory/Rank/UNMC/marine_o3.rsi
+    state: icon
+  - type: UniformAccessory
+    playerSprite:
+      sprite: _RMC14/Objects/Clothing/Accessory/Rank/UNMC/marine_o3.rsi
+      state: equipped
+
+- type: entity
+  parent: RMCBaseRankPin
+  id: RMCRankPinMarineO4
+  name: major rank pin
+  components:
+  - type: Sprite
+    sprite: _RMC14/Objects/Clothing/Accessory/Rank/UNMC/marine_o4.rsi
+    state: icon
+  - type: UniformAccessory
+    playerSprite:
+      sprite: _RMC14/Objects/Clothing/Accessory/Rank/UNMC/marine_o4.rsi
+      state: equipped
+
+- type: entity
+  parent: RMCBaseRankPin
+  id: RMCRankPinMarineO5
+  name: lieutenant colonel rank pin
+  components:
+  - type: Sprite
+    sprite: _RMC14/Objects/Clothing/Accessory/Rank/UNMC/marine_o5.rsi
+    state: icon
+  - type: UniformAccessory
+    playerSprite:
+      sprite: _RMC14/Objects/Clothing/Accessory/Rank/UNMC/marine_o5.rsi
+      state: equipped
+
+- type: entity
+  parent: RMCBaseRankPin
+  id: RMCRankPinMarineO6
+  name: colonel rank pin
+  components:
+  - type: Sprite
+    sprite: _RMC14/Objects/Clothing/Accessory/Rank/UNMC/marine_o6.rsi
+    state: icon
+  - type: UniformAccessory
+    playerSprite:
+      sprite: _RMC14/Objects/Clothing/Accessory/Rank/UNMC/marine_o6.rsi
+      state: equipped
+
+- type: entity
+  parent: RMCBaseRankPin
+  id: RMCRankPinMarineO7
+  name: brigadier general rank pin
+  components:
+  - type: Sprite
+    sprite: _RMC14/Objects/Clothing/Accessory/Rank/UNMC/marine_o7.rsi
+    state: icon
+  - type: UniformAccessory
+    playerSprite:
+      sprite: _RMC14/Objects/Clothing/Accessory/Rank/UNMC/marine_o7.rsi
+      state: equipped
+
+- type: entity
+  parent: RMCBaseRankPin
+  id: RMCRankPinMarineO8
+  name: major general rank pin
+  components:
+  - type: Sprite
+    sprite: _RMC14/Objects/Clothing/Accessory/Rank/UNMC/marine_o8.rsi
+    state: icon
+  - type: UniformAccessory
+    playerSprite:
+      sprite: _RMC14/Objects/Clothing/Accessory/Rank/UNMC/marine_o8.rsi
+      state: equipped
+
+- type: entity
+  parent: RMCBaseRankPin
+  id: RMCRankPinMarineO9
+  name: lieutenant general rank pin
+  components:
+  - type: Sprite
+    sprite: _RMC14/Objects/Clothing/Accessory/Rank/UNMC/marine_o9.rsi
+    state: icon
+  - type: UniformAccessory
+    playerSprite:
+      sprite: _RMC14/Objects/Clothing/Accessory/Rank/UNMC/marine_o9.rsi
+      state: equipped
+
+- type: entity
+  parent: RMCBaseRankPin
+  id: RMCRankPinMarineO10
+  name: general rank pin
+  components:
+  - type: Sprite
+    sprite: _RMC14/Objects/Clothing/Accessory/Rank/UNMC/marine_o10.rsi
+    state: icon
+  - type: UniformAccessory
+    playerSprite:
+      sprite: _RMC14/Objects/Clothing/Accessory/Rank/UNMC/marine_o10.rsi
+      state: equipped
+
+- type: entity
+  parent: RMCBaseRankPin
+  id: RMCRankPinNavyEnlisted
+  name: navy enlisted rank pin
+  components:
+  - type: Sprite
+    sprite: _RMC14/Objects/Clothing/Accessory/Rank/UNMC/navy_enlisted.rsi
+    state: icon
+  - type: UniformAccessory
+    playerSprite:
+      sprite: _RMC14/Objects/Clothing/Accessory/Rank/UNMC/navy_enlisted.rsi
+      state: equipped
+
+- type: entity
+  parent: RMCBaseRankPin
+  id: RMCRankPinNavyNco
+  name: navy petty officer rank pin
+  components:
+  - type: Sprite
+    sprite: _RMC14/Objects/Clothing/Accessory/Rank/UNMC/navy_nco.rsi
+    state: icon
+  - type: UniformAccessory
+    playerSprite:
+      sprite: _RMC14/Objects/Clothing/Accessory/Rank/UNMC/navy_nco.rsi
+      state: equipped
+
+- type: entity
+  parent: RMCBaseRankPin
+  id: RMCRankPinNavySnco
+  name: navy senior chief rank pin
+  components:
+  - type: Sprite
+    sprite: _RMC14/Objects/Clothing/Accessory/Rank/UNMC/navy_snco.rsi
+    state: icon
+  - type: UniformAccessory
+    playerSprite:
+      sprite: _RMC14/Objects/Clothing/Accessory/Rank/UNMC/navy_snco.rsi
+      state: equipped
+
+- type: entity
+  parent: RMCBaseRankPin
+  id: RMCRankPinNavyOfficer
+  name: navy officer rank pin
+  components:
+  - type: Sprite
+    sprite: _RMC14/Objects/Clothing/Accessory/Rank/UNMC/navy_officer.rsi
+    state: icon
+  - type: UniformAccessory
+    playerSprite:
+      sprite: _RMC14/Objects/Clothing/Accessory/Rank/UNMC/navy_officer.rsi
+      state: equipped
+
+- type: entity
+  parent: RMCBaseRankPin
+  id: RMCRankPinNavySeniorOfficer
+  name: navy senior officer rank pin
+  components:
+  - type: Sprite
+    sprite: _RMC14/Objects/Clothing/Accessory/Rank/UNMC/navy_senior_officer.rsi
+    state: icon
+  - type: UniformAccessory
+    playerSprite:
+      sprite: _RMC14/Objects/Clothing/Accessory/Rank/UNMC/navy_senior_officer.rsi
+      state: equipped
+
+- type: entity
+  parent: RMCBaseRankPin
+  id: RMCRankPinNavyFlagOfficer
+  name: navy flag officer rank pin
+  components:
+  - type: Sprite
+    sprite: _RMC14/Objects/Clothing/Accessory/Rank/UNMC/navy_flag_officer.rsi
+    state: icon
+  - type: UniformAccessory
+    playerSprite:
+      sprite: _RMC14/Objects/Clothing/Accessory/Rank/UNMC/navy_flag_officer.rsi
+      state: equipped
+
+- type: entity
+  parent: RMCBaseRankPin
+  id: RMCRankPinProvostInspector
+  name: provost inspector rank pin
+  components:
+  - type: Sprite
+    sprite: _RMC14/Objects/Clothing/Accessory/Rank/UNMC/provost_inspector.rsi
+    state: icon
+  - type: UniformAccessory
+    playerSprite:
+      sprite: _RMC14/Objects/Clothing/Accessory/Rank/UNMC/provost_inspector.rsi
+      state: equipped
