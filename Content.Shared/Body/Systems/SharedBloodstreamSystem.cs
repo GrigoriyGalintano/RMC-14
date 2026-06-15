@@ -1,6 +1,9 @@
 using Content.Shared._RMC14.Damage;
 using Content.Shared._RMC14.Medical.Stasis;
 using Content.Shared._RMC14.Medical.Wounds;
+// RMC14
+using Content.Shared._RMC14.Stains;
+// RMC14
 using Content.Shared.Alert;
 using Content.Shared.Body.Components;
 using Content.Shared.Body.Events;
@@ -149,6 +152,9 @@ public abstract class SharedBloodstreamSystem : EntitySystem
     {
         ent.Comp.NextUpdate = _timing.CurTime + ent.Comp.AdjustedUpdateInterval;
         DirtyField(ent, ent.Comp, nameof(BloodstreamComponent.NextUpdate));
+        // RMC14
+        EnsureComp<RMCBodyStainsComponent>(ent);
+        // RMC14
     }
 
     // prevent the infamous UdderSystem debug assert, see https://github.com/space-wizards/space-station-14/pull/35314

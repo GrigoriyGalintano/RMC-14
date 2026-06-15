@@ -103,6 +103,8 @@
   - type: Tag
     tags:
     - RMCHelmet
+  - type: RMCStainOverlay
+    equippedOverlayType: helmet
 
 - type: entity
   parent: RMCHelmetBase

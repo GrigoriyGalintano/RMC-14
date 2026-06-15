@@ -55,6 +55,7 @@
     cover:
       tags:
       - Catwalk
+  - type: RMCWaterCleanStains
 
 - type: entity
   parent: CMFloorShallowWaterEntity
@@ -69,6 +70,8 @@
   - type: SpeedModifierContacts
     walkSpeedModifier: 0.25
     sprintSpeedModifier: 0.25
+  - type: RMCWaterCleanStains
+    cleanInventory: true
 
 - type: entity
   parent: CMFloorShallowWaterEntity
@@ -77,6 +80,8 @@
   components:
   - type: Sprite
     sprite: _RMC14/Tiles/planet/sorokyne/sorokyne_water.rsi
+  - type: RMCWaterCleanStains
+    cleanInventory: true
 
 - type: entity
   parent: CMFloorShallowWaterEntity

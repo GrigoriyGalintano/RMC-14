@@ -16,6 +16,8 @@
       Snow: _RMC14/Objects/Clothing/Head/Helmets/m10/standard/snow.rsi
       Classic: _RMC14/Objects/Clothing/Head/Helmets/m10/standard/classic.rsi
       Urban: _RMC14/Objects/Clothing/Head/Helmets/m10/standard/urban.rsi
+  - type: RMCStainOverlay
+    equippedOverlayType: m10helmet
 
 - type: entity
   parent: ArmorHelmetM10

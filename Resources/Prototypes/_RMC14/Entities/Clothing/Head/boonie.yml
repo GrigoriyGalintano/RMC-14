@@ -18,6 +18,8 @@
       jungle: _RMC14/Objects/Clothing/Head/Hats/boonie/jungle.rsi
       snow: _RMC14/Objects/Clothing/Head/Hats/boonie/snow.rsi
       urban: _RMC14/Objects/Clothing/Head/Hats/boonie/urban.rsi
+  - type: RMCStainOverlay
+    equippedOverlayType: booniehat
 
 - type: entity
   parent: RMCBoonie

@@ -7,3 +7,5 @@
   color: "#EEEEEE"
   unknown: true
   flavor: funny
+  tileReactions:
+  - !type:RMCBloodTileReaction {}

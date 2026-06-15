@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "license": "CC-BY-SA-3.0",
+  "copyright": "Ported from CMSS13 icons/effects/blood.dmi at commit b26246cf7710ac6f2c2e4eddf94a49eb47f40800. inhand-left and inhand-right are aliases of CMSS13 handblood.",
+  "size": {
+    "x": 32,
+    "y": 32
+  },
+  "states": [
+    {
+      "name": "itemblood"
+    },
+    {
+      "name": "inhand-left"
+    },
+    {
+      "name": "inhand-right"
+    }
+  ]
+}

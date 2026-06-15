@@ -35,6 +35,8 @@
       path: /Audio/_RMC14/Machines/armor_equip.ogg
   - type: MoveOrderArmor
   - type: StoreAfterFailedInteract
+  - type: RMCStainOverlay
+    equippedOverlayType: armor
 
 - type: entity
   parent: [ RMCBaseArmorNoAccessory, RMCBaseUniformAccessoryItemOuterClothing ]

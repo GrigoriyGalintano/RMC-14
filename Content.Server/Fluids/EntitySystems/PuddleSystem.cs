@@ -2,6 +2,9 @@ using Content.Server.Administration.Logs;
 using Content.Server.Chemistry.TileReactions;
 using Content.Server.Fluids.Components;
 using Content.Server.Spreader;
+// RMC14
+using Content.Server._RMC14.Stains;
+// RMC14
 using Content.Shared.ActionBlocker;
 using Content.Shared._RMC14.Chemistry.Reagent;
 using Content.Shared.Chemistry;
@@ -57,6 +60,9 @@ public sealed partial class PuddleSystem : SharedPuddleSystem
     [Dependency] private readonly TileFrictionController _tile = default!;
     [Dependency] private readonly SharedTransformSystem _transform = default!;
     [Dependency] private readonly TurfSystem _turf = default!;
+    // RMC14
+    [Dependency] private readonly RMCStainSystem _rmcStains = default!;
+    // RMC14
 
     // Using local deletion queue instead of the standard queue so that we can easily "undelete" if a puddle
     // loses & then gains reagents in a single tick.
@@ -327,6 +333,9 @@ public sealed partial class PuddleSystem : SharedPuddleSystem
         UpdateSlip((entity, entity.Comp), args.Solution);
         UpdateSlow(entity, args.Solution);
         UpdateEvaporation(entity, args.Solution);
+        // RMC14
+        _rmcStains.TryCreateFloorStainFromPuddle(entity, args.Solution);
+        // RMC14
     }
 
     private void UpdateSlip(Entity<PuddleComponent> entity, Solution solution)

@@ -37,6 +37,9 @@
   tileReactions:
     - !type:CleanTileReaction {}
     - !type:CleanDecalsReaction {}
+    # RMC14
+    - !type:RMCCleanStainsTileReaction {}
+    # RMC14
 
 - type: reagent
   id: SoapReagent

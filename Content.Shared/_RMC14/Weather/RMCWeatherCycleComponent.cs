@@ -59,6 +59,18 @@ public sealed partial class RMCWeatherEvent
 
     [DataField]
     public SoundSpecifier LightningSound = new SoundCollectionSpecifier("RMCThunder");
+
+    [DataField]
+    public bool CleansFloorStains;
+
+    [DataField]
+    public TimeSpan CleanInterval = TimeSpan.FromSeconds(10);
+
+    [DataField]
+    public TimeSpan CleanCooldown;
+
+    [DataField]
+    public float CleanChance = 0.05f;
 }
 
 

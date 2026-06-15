@@ -34,6 +34,8 @@
     blacklist:
       components:
       - Xeno
+  - type: RMCStainOverlay
+    equippedOverlayType: jacket
 
 - type: entity
   abstract: True

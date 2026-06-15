@@ -14,9 +14,12 @@ using Content.Shared._RMC14.Xenonids;
 using Robust.Shared.Audio.Systems;
 using System.Linq;
 using Content.Server._RMC14.Decals;
+using Content.Server._RMC14.Stains;
 using Content.Server.Spawners.Components;
+using Content.Shared._RMC14.Stains;
 using Content.Shared.Body.Events;
 using Content.Shared.Effects;
+using Content.Shared.Maps;
 using Content.Shared._RMC14.Stun;
 
 namespace Content.Server._RMC14.Xenonids.AcidBloodSplash;
@@ -33,8 +36,11 @@ public sealed class AcidBloodSplashSystem : EntitySystem
     [Dependency] private readonly IPrototypeManager _prototypes = default!;
     [Dependency] private readonly SharedPopupSystem _popup = default!;
     [Dependency] private readonly RMCDecalSystem _rmcDecal = default!;
+    [Dependency] private readonly RMCStainSystem _rmcStain = default!;
     [Dependency] private readonly SharedColorFlashEffectSystem _colorFlash = default!;
+    [Dependency] private readonly SharedRMCStainSystem _stains = default!;
     [Dependency] private readonly IGameTiming _timing = default!;
+    [Dependency] private readonly TurfSystem _turf = default!;
     [Dependency] private readonly XenoSystem _xeno = default!;
 
     private static readonly ProtoId<EmotePrototype> ScreamProto = "Scream";
@@ -68,6 +74,9 @@ public sealed class AcidBloodSplashSystem : EntitySystem
             Spawn(ent.Comp.BloodDecalSpawnerPrototype, ent.Owner.ToCoordinates());
         }
 
+        if (_turf.TryGetTileRef(Transform(ent).Coordinates, out var splashTile))
+            _rmcStain.TryCreateFloorStain(splashTile.Value, RMCStainKind.Blood, RMCStainColors.XenoBlood, 2, "Slime");
+
         var i = 0; // parity moment, I would prefer a for loop if I knew how to do it in not ugly way.
         var targetsSet = _entityLookup.GetEntitiesInRange(ent.Owner.ToCoordinates(), splashRadius);
         var closeRangeTargets = _entityLookup.GetEntitiesInRange(ent.Owner.ToCoordinates(), ent.Comp.CloseSplashRadius);
@@ -90,7 +99,11 @@ public sealed class AcidBloodSplashSystem : EntitySystem
 
             ent.Comp.NextSplashAvailable = _timing.CurTime + ent.Comp.SplashCooldown;
             _damageable.TryChangeDamage(target, _xeno.TryApplyXenoAcidDamageMultiplier(target, ent.Comp.Damage));
+            _stains.TryStainMob(target, RMCStainTargetFlags.Body | RMCStainTargetFlags.Hands, RMCStainColors.XenoBlood);
             i++;
+
+            if (_turf.TryGetTileRef(Transform(target).Coordinates, out var targetTile))
+                _rmcStain.TryCreateFloorStain(targetTile.Value, RMCStainKind.Blood, RMCStainColors.XenoBlood, 1, "Slime");
 
             _audio.PlayPvs(ent.Comp.AcidSplashSound, target);
 

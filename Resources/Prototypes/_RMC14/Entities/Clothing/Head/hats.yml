@@ -11,6 +11,8 @@
   - type: Tag
     tags:
     - ClothMade
+  - type: RMCStainOverlay
+    equippedOverlayType: beret
 
 - type: entity
   parent: CMHeadBeret

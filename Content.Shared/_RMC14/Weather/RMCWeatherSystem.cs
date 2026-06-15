@@ -94,6 +94,20 @@ public sealed class RMCWeatherSystem : EntitySystem
         _audio.PlayGlobal(_audio.ResolveSound(sound), Filter.BroadcastMap(Transform(ent).MapID), true);
     }
 
+    public bool TryUseFloorStainCleanTick(Entity<RMCWeatherCycleComponent> ent, TimeSpan elapsed)
+    {
+        if (ent.Comp.CurrentEvent == null)
+            return false;
+
+        ent.Comp.CurrentEvent.CleanCooldown -= elapsed;
+        if (ent.Comp.CurrentEvent.CleanCooldown > TimeSpan.Zero)
+            return false;
+
+        ent.Comp.CurrentEvent.CleanCooldown = ent.Comp.CurrentEvent.CleanInterval;
+        Dirty(ent);
+        return true;
+    }
+
     public override void Update(float frameTime)
     {
         if (_net.IsClient)

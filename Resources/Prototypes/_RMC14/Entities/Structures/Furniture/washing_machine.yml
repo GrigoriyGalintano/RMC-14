@@ -2,7 +2,7 @@
   id: CMWashingMachine
   parent: BaseStructure
   name: washing machine
-  description: The WM-321 is a rugged, cylindrical powerhouse, equipped with a transparent window. This one is not operational.
+  description: The WM-321 is a rugged, cylindrical powerhouse, equipped with a transparent window.
   placement:
     mode: SnapgridCenter
   components:
@@ -57,6 +57,7 @@
     closeSound:
       path: /Audio/Effects/closetclose.ogg
   - type: Appearance
+  - type: RMCWashingMachine
   - type: GenericVisualizer
     visuals:
       enum.OpenableVisuals.Opened:

@@ -44,6 +44,10 @@
     collection: FootstepBlood
     params:
       volume: 6
+  # RMC14
+  tileReactions:
+    - !type:RMCBloodTileReaction {}
+  # RMC14
 
 - type: reagent
   parent: Blood
@@ -68,6 +72,9 @@
   viscosity: 0.25
   tileReactions:
     - !type:SpillTileReaction
+    # RMC14
+    - !type:RMCBloodTileReaction {}
+    # RMC14
   metabolisms:
     Food:
       # Delicious!
@@ -148,6 +155,10 @@
             Poison: 4
       - !type:ChemVomit
         probability: 0.25
+  # RMC14
+  tileReactions:
+    - !type:RMCBloodTileReaction {}
+  # RMC14
 
 - type: reagent
   id: Ichor

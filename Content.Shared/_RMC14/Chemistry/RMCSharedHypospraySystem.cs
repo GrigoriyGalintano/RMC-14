@@ -1,5 +1,6 @@
 ﻿using Content.Shared._RMC14.Marines.Skills;
 using Content.Shared._RMC14.Medical.Refill;
+using Content.Shared._RMC14.Stains;
 using Content.Shared.Administration.Logs;
 using Content.Shared.Chemistry;
 using Content.Shared.Chemistry.Components;
@@ -38,6 +39,7 @@ public abstract class RMCSharedHypospraySystem : EntitySystem
     [Dependency] protected readonly IPrototypeManager _prototype = default!;
     [Dependency] protected readonly ReactiveSystem _reactive = default!;
     [Dependency] protected readonly SharedSolutionContainerSystem _solution = default!;
+    [Dependency] protected readonly SharedRMCStainSystem _stains = default!;
     [Dependency] protected readonly INetManager _net = default!;
     [Dependency] protected readonly SharedPopupSystem _popup = default!;
     [Dependency] protected readonly SkillsSystem _skills = default!;
@@ -356,6 +358,13 @@ public abstract class RMCSharedHypospraySystem : EntitySystem
 
         var ev = new TransferDnaEvent { Donor = target, Recipient = ent };
         RaiseLocalEvent(target, ref ev);
+
+        if (_stains.TryGetBloodStain(target, out var kind, out var color, out var sourceReagent))
+        {
+            _stains.TryStain(ent, kind, color, target, sourceReagent: sourceReagent);
+            if (target != args.User)
+                _stains.TryStainMob(args.User, RMCStainTargetFlags.Hands, color, kind);
+        }
 
         // same LogType as syringes...
         _adminLog.Add(LogType.ForceFeed, $"{EntityManager.ToPrettyString(args.User):user} injected {EntityManager.ToPrettyString(target):target} with a solution {SharedSolutionContainerSystem.ToPrettyString(removedSolution):removedSolution} using a {EntityManager.ToPrettyString(ent):using}");

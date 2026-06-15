@@ -4,6 +4,9 @@ using Content.Server.Fluids.EntitySystems;
 using Content.Server.Forensics.Components;
 using Content.Server.Popups;
 using Content.Shared.Body.Events;
+// RMC14
+using Content.Shared._RMC14.Stains;
+// RMC14
 using Content.Shared.Chemistry.EntitySystems;
 using Content.Shared.Popups;
 using Content.Shared.Chemistry.Components;
@@ -30,6 +33,9 @@ namespace Content.Server.Forensics
         [Dependency] private readonly DoAfterSystem _doAfterSystem = default!;
         [Dependency] private readonly PopupSystem _popupSystem = default!;
         [Dependency] private readonly SharedSolutionContainerSystem _solutionContainerSystem = default!;
+        // RMC14
+        [Dependency] private readonly SharedRMCStainSystem _rmcStains = default!;
+        // RMC14
 
         public override void Initialize()
         {
@@ -64,6 +70,9 @@ namespace Content.Server.Forensics
         private void OnInteract(EntityUid uid, HandsComponent component, ContactInteractionEvent args)
         {
             ApplyEvidence(uid, args.Other);
+            // RMC14
+            _rmcStains.TryTransferHandStain(uid, args.Other);
+            // RMC14
         }
 
         private void OnFingerprintInit(Entity<FingerprintComponent> ent, ref MapInitEvent args)
@@ -213,8 +222,29 @@ namespace Content.Server.Forensics
         /// <returns>True if the target can be cleaned and has some sort of DNA or fingerprints / fibers and false otherwise.</returns>
         public bool TryStartCleaning(Entity<CleansForensicsComponent> cleanForensicsEntity, EntityUid user, EntityUid target)
         {
+            // RMC14
+            var hasCleanableStain = _rmcStains.HasCleanableStain(target);
+            // RMC14
             if (!TryComp<ForensicsComponent>(target, out var forensicsComp))
             {
+                // RMC14
+                if (hasCleanableStain)
+                {
+                    var stainOnlyDoAfterArgs = new DoAfterArgs(EntityManager, user, cleanForensicsEntity.Comp.CleanDelay, new CleanForensicsDoAfterEvent(), cleanForensicsEntity, target: target, used: cleanForensicsEntity)
+                    {
+                        NeedHand = true,
+                        BreakOnDamage = true,
+                        BreakOnMove = true,
+                        MovementThreshold = 0.01f,
+                        DistanceThreshold = 1.5f,
+                    };
+
+                    _doAfterSystem.TryStartDoAfter(stainOnlyDoAfterArgs);
+                    _popupSystem.PopupEntity(Loc.GetString("forensics-cleaning", ("target", target)), user, user);
+                    return true;
+                }
+                // RMC14
+
                 _popupSystem.PopupEntity(Loc.GetString("forensics-cleaning-cannot-clean", ("target", target)), user, user, PopupType.MediumCaution);
                 return false;
             }
@@ -222,7 +252,9 @@ namespace Content.Server.Forensics
             var totalPrintsAndFibers = forensicsComp.Fingerprints.Count + forensicsComp.Fibers.Count;
             var hasRemovableDNA = forensicsComp.DNAs.Count > 0 && forensicsComp.CanDnaBeCleaned;
 
-            if (hasRemovableDNA || totalPrintsAndFibers > 0)
+            // RMC14
+            if (hasRemovableDNA || totalPrintsAndFibers > 0 || hasCleanableStain)
+            // RMC14
             {
                 var cleanDelay = cleanForensicsEntity.Comp.CleanDelay;
                 var doAfterArgs = new DoAfterArgs(EntityManager, user, cleanDelay, new CleanForensicsDoAfterEvent(), cleanForensicsEntity, target: target, used: cleanForensicsEntity)

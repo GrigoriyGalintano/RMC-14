@@ -8,6 +8,8 @@
       Snout: Mask
     hideOnToggle: true
   - type: Appearance
+  - type: RMCStainOverlay
+    equippedOverlayType: mask
 
 - type: entity
   parent: CMBaseMask
@@ -38,6 +40,8 @@
   - type: Tag
     tags:
     - GasMask
+  - type: RMCStainOverlay
+    equippedOverlayType: gasmask
 
 - type: entity
   parent: CMBaseMask
@@ -60,6 +64,8 @@
   - type: Tag
     tags:
     - GasMask
+  - type: RMCStainOverlay
+    equippedOverlayType: gasmask
 
 - type: entity
   parent: CMBaseMask
@@ -80,6 +86,8 @@
   - type: Tag
     tags:
     - GasMask
+  - type: RMCStainOverlay
+    equippedOverlayType: gasmask
 
 - type: Tag
   id: GasMask
@@ -99,6 +107,8 @@
   - type: Tag
     tags:
     - SterileMask
+  - type: RMCStainOverlay
+    equippedOverlayType: sterile
 
 - type: Tag
   id: SterileMask
@@ -113,6 +123,8 @@
     sprite: _RMC14/Objects/Clothing/Mask/medical.rsi
   - type: Clothing
     sprite: _RMC14/Objects/Clothing/Mask/medical.rsi
+  - type: RMCStainOverlay
+    equippedOverlayType: gasmask
 
 - type: entity
   parent: CMBaseMask

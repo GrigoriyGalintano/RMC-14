@@ -2,6 +2,8 @@
 using Content.Server.Body.Systems;
 using Content.Server.Chat.Systems;
 using Content.Server.Popups;
+using Content.Server._RMC14.Stains;
+using Content.Shared._RMC14.Stains;
 using Content.Shared._RMC14.Stun;
 using Content.Shared._RMC14.Marines.Skills;
 using Content.Shared._RMC14.Medical.Surgery;
@@ -12,6 +14,7 @@ using Content.Shared._RMC14.Medical.Wounds;
 using Content.Shared._RMC14.Xenonids.Organs;
 using Content.Shared._RMC14.Xenonids.Parasite;
 using Content.Shared.Interaction;
+using Content.Shared.Maps;
 using Content.Shared.Prototypes;
 using Robust.Server.GameObjects;
 using Robust.Shared.Containers;
@@ -29,7 +32,10 @@ public sealed class CMSurgerySystem : SharedCMSurgerySystem
     [Dependency] private readonly INetManager _net = default!;
     [Dependency] private readonly IPrototypeManager _prototypes = default!;
     [Dependency] private readonly PopupSystem _popup = default!;
+    [Dependency] private readonly RMCStainSystem _rmcStain = default!;
     [Dependency] private readonly SkillsSystem _skills = default!;
+    [Dependency] private readonly SharedRMCStainSystem _stains = default!;
+    [Dependency] private readonly TurfSystem _turf = default!;
     [Dependency] private readonly UserInterfaceSystem _ui = default!;
     [Dependency] private readonly WoundsSystem _wounds = default!;
 
@@ -111,6 +117,7 @@ public sealed class CMSurgerySystem : SharedCMSurgerySystem
     private void OnStepBleedComplete(Entity<CMSurgeryStepBleedEffectComponent> ent, ref CMSurgeryStepEvent args)
     {
         _wounds.AddWound(args.Body, ent.Comp.Damage, WoundType.Surgery, TimeSpan.MaxValue);
+        SpillSurgeryBlood(args, 2);
     }
 
     private void OnStepClampBleedComplete(Entity<CMSurgeryClampBleedEffectComponent> ent, ref CMSurgeryStepEvent args)
@@ -129,7 +136,12 @@ public sealed class CMSurgerySystem : SharedCMSurgerySystem
     private void OnStepSpawnComplete(Entity<RMCSurgeryStepSpawnEffectComponent> ent, ref CMSurgeryStepEvent args)
     {
         if (TryComp(args.Body, out TransformComponent? xform))
-            SpawnAtPosition(ent.Comp.Entity, xform.Coordinates);
+        {
+            var spawned = SpawnAtPosition(ent.Comp.Entity, xform.Coordinates);
+            StainSpawnedFromBody(args.Body, spawned);
+        }
+
+        SpillSurgeryBlood(args);
     }
 
     private void OnStepLarvaComplete(Entity<RMCSurgeryStepLarvaEffectComponent> ent, ref CMSurgeryStepEvent args)
@@ -153,8 +165,11 @@ public sealed class CMSurgerySystem : SharedCMSurgerySystem
         }
         else
         {
-            SpawnAtPosition(ent.Comp.DeadLarvaItem, coords);
+            var spawned = SpawnAtPosition(ent.Comp.DeadLarvaItem, coords);
+            StainSpawnedFromBody(args.Body, spawned);
         }
+
+        SpillSurgeryBlood(args, 3);
     }
 
     private void OnStepXenoHeartComplete(Entity<RMCSurgeryStepXenoHeartEffectComponent> ent, ref CMSurgeryStepEvent args)
@@ -173,8 +188,33 @@ public sealed class CMSurgerySystem : SharedCMSurgerySystem
             QueueDel(entity.Owner);
         }
 
-        SpawnAtPosition(heart.Item, xform.Coordinates);
+        var spawned = SpawnAtPosition(heart.Item, xform.Coordinates);
+        StainSpawnedFromBody(args.Body, spawned);
+        SpillSurgeryBlood(args, 3);
         RemCompDeferred<RMCSurgeryXenoHeartComponent>(args.Body);
+    }
+
+    private void SpillSurgeryBlood(CMSurgeryStepEvent args, int amount = 1)
+    {
+        if (!_stains.TryGetBloodStain(args.Body, out var kind, out var color, out var sourceReagent))
+            return;
+
+        foreach (var tool in args.Tools)
+        {
+            _stains.TryStain(tool, kind, color, args.Body, sourceReagent: sourceReagent);
+        }
+
+        _stains.TryStainMob(args.User, RMCStainTargetFlags.Hands, color, kind);
+        _stains.TryStainMob(args.Body, RMCStainTargetFlags.Body, color, kind);
+
+        if (_turf.TryGetTileRef(Transform(args.Body).Coordinates, out var tile))
+            _rmcStain.TryCreateFloorStain(tile.Value, kind, color, amount, sourceReagent);
+    }
+
+    private void StainSpawnedFromBody(EntityUid body, EntityUid spawned)
+    {
+        if (_stains.TryGetBloodStain(body, out var kind, out var color, out var sourceReagent))
+            _stains.TryStain(spawned, kind, color, body, sourceReagent: sourceReagent);
     }
 
     private void OnPrototypesReloaded(PrototypesReloadedEventArgs args)

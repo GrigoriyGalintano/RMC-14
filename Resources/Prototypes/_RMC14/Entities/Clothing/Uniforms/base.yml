@@ -34,6 +34,8 @@
         reagents:
         - ReagentId: Fiber
           Quantity: 30
+  - type: RMCStainOverlay
+    equippedOverlayType: uniform
 
 - type: entity
   abstract: true

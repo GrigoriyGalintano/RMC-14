@@ -1,0 +1,16 @@
+rmc-stain-examine-blood = It is bloody.
+rmc-stain-examine-oil = It is oil-stained.
+rmc-stain-examine-hands = Their hands are stained.
+rmc-stain-examine-feet = Their feet are stained.
+rmc-sink-wash-hands = You wash your hands in {THE($sink)}.
+rmc-sink-wash-item = You wash {THE($item)} in {THE($sink)}.
+rmc-shower-toggle-on = You turn on the shower.
+rmc-shower-toggle-off = You turn off the shower.
+rmc-washing-machine-closed = Open the washing machine first.
+rmc-washing-machine-running = The washing machine is running.
+rmc-washing-machine-full = The washing machine is full.
+rmc-washing-machine-reject = {THE($item)} cannot be washed in there.
+rmc-washing-machine-insert = You put {THE($item)} into the washing machine.
+rmc-washing-machine-remove = You take {THE($item)} out of the washing machine.
+rmc-washing-machine-start = The washing machine starts its cycle.
+rmc-washing-machine-finish = The washing machine finishes its cycle.

@@ -1,0 +1,80 @@
+{
+  "version": 1,
+  "license": "CC-BY-SA-3.0",
+  "copyright": "Ported from CMSS13 icons/effects/blood.dmi at commit b26246cf7710ac6f2c2e4eddf94a49eb47f40800. item_blood is an alias of CMSS13 itemblood for SS14 equipment visuals.",
+  "size": {
+    "x": 32,
+    "y": 32
+  },
+  "states": [
+    {
+      "name": "item_blood"
+    },
+    {
+      "name": "suit_blood"
+    },
+    {
+      "name": "uniform_blood"
+    },
+    {
+      "name": "uniform_d_blood"
+    },
+    {
+      "name": "uniform_df_blood"
+    },
+    {
+      "name": "uniform_dj_blood"
+    },
+    {
+      "name": "helmet_blood"
+    },
+    {
+      "name": "mask_blood"
+    },
+    {
+      "name": "hands_blood"
+    },
+    {
+      "name": "feet_blood"
+    },
+    {
+      "name": "armor_blood"
+    },
+    {
+      "name": "coat_blood"
+    },
+    {
+      "name": "jacket_blood"
+    },
+    {
+      "name": "gasmask_blood"
+    },
+    {
+      "name": "sterile_blood"
+    },
+    {
+      "name": "surgcap_blood"
+    },
+    {
+      "name": "beret_blood"
+    },
+    {
+      "name": "booniehat_blood"
+    },
+    {
+      "name": "hardhat_blood"
+    },
+    {
+      "name": "m10helmet_blood"
+    },
+    {
+      "name": "vest_blood"
+    },
+    {
+      "name": "apron_blood"
+    },
+    {
+      "name": "bigsuit_blood"
+    }
+  ]
+}

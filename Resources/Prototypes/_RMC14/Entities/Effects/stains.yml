@@ -1,0 +1,8 @@
+- type: entity
+  id: RMCFloorStain
+  name: floor stain
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Transform
+    anchored: true
+  - type: RMCFloorStain
