@@ -1,21 +1,22 @@
-using Content.Shared._RMC14.Chemistry.Reagent;
-using Content.Shared._RMC14.Scaling;
-using Content.Shared.Chemistry;
+using System.Linq;
 using Content.Shared.Chemistry.Components;
 using Content.Shared.Chemistry.EntitySystems;
-using Content.Shared.Containers;
+using Content.Shared.Chemistry;
 using Content.Shared.Containers.ItemSlots;
+using Content.Shared.Containers;
 using Content.Shared.Examine;
 using Content.Shared.FixedPoint;
 using Content.Shared.Popups;
 using Content.Shared.Verbs;
 using Content.Shared.Whitelist;
+using Content.Shared._RMC14.Chemistry.Reagent;
+using Content.Shared._RMC14.Scaling;
+using Content.Shared._RMC14.UserInterface;
 using Robust.Shared.Containers;
 using Robust.Shared.GameStates;
 using Robust.Shared.Network;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
-using System.Linq;
 
 namespace Content.Shared._RMC14.Chemistry;
 
@@ -28,6 +29,7 @@ public abstract class SharedRMCChemistrySystem : EntitySystem
     [Dependency] private readonly SharedPopupSystem _popup = default!;
     [Dependency] private readonly IPrototypeManager _prototypes = default!;
     [Dependency] private readonly RMCReagentSystem _rmcReagent = default!;
+    [Dependency] private readonly RMCUserInterfaceSystem _rmcUI = default!;
     [Dependency] private readonly ScalingSystem _scaling = default!;
     [Dependency] private readonly SharedSolutionContainerSystem _solution = default!;
     [Dependency] private readonly IGameTiming _timing = default!;
@@ -43,6 +45,7 @@ public abstract class SharedRMCChemistrySystem : EntitySystem
         SubscribeLocalEvent<DetailedExaminableSolutionComponent, ExaminedEvent>(OnDetailedSolutionExamined);
 
         SubscribeLocalEvent<RMCChemicalDispenserComponent, MapInitEvent>(OnDispenserMapInit);
+        SubscribeLocalEvent<RMCChemicalDispenserComponent, BoundUserInterfaceMessageAttempt>(OnDispenserUIMessageAttempt);
 
         SubscribeLocalEvent<RMCToggleableSolutionTransferComponent, MapInitEvent>(OnToggleableSolutionTransferMapInit);
         SubscribeLocalEvent<RMCToggleableSolutionTransferComponent, GetVerbsEvent<AlternativeVerb>>(OnToggleableSolutionTransferVerbs);
@@ -123,6 +126,12 @@ public abstract class SharedRMCChemistrySystem : EntitySystem
                     args.PushText(directionText);
             }
         }
+    }
+
+    private void OnDispenserUIMessageAttempt(Entity<RMCChemicalDispenserComponent> ent, ref BoundUserInterfaceMessageAttempt args)
+    {
+        if (args.UiKey is RMCChemicalDispenserUi.Key && !_rmcUI.CanUseUI(args))
+            args.Cancel();
     }
 
     private void OnDispenserMapInit(Entity<RMCChemicalDispenserComponent> ent, ref MapInitEvent args)

@@ -146,6 +146,12 @@ public sealed class SharedXenoFruitSystem : EntitySystem
 
     private void OnXenoFruitChooseBui(Entity<XenoFruitPlanterComponent> xeno, ref XenoFruitChooseBuiMsg args)
     {
+        if (args.Actor != xeno.Owner)
+            return;
+
+        if (!_ui.IsUiOpen(xeno.Owner, XenoFruitChooseUI.Key, args.Actor))
+            return;
+
         if (!xeno.Comp.CanPlant.Contains(args.FruitId))
             return;
 

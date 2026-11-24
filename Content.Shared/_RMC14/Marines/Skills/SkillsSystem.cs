@@ -9,6 +9,7 @@ using Content.Shared.Chemistry.Reagent;
 using Content.Shared.Damage;
 using Content.Shared.Examine;
 using Content.Shared.Flash;
+using Content.Shared.Ghost;
 using Content.Shared.Interaction;
 using Content.Shared.Interaction.Events;
 using Content.Shared.Containers.ItemSlots;
@@ -65,6 +66,7 @@ public sealed class SkillsSystem : EntitySystem
 
         SubscribeLocalEvent<RequiresSkillComponent, BeforeRangedInteractEvent>(OnRequiresSkillBeforeRangedInteract);
         SubscribeLocalEvent<RequiresSkillComponent, ActivatableUIOpenAttemptEvent>(OnRequiresSkillActivatableUIOpenAttempt);
+        SubscribeLocalEvent<RequiresSkillComponent, BoundUserInterfaceMessageAttempt>(OnRequiresSkillBoundUIAttempt);
         SubscribeLocalEvent<RequiresSkillComponent, UseInHandEvent>(OnRequiresSkillUseInHand, before: [typeof(HypospraySystem), typeof(SharedFlashSystem)]);
 
         SubscribeLocalEvent<MeleeRequiresSkillComponent, AttemptMeleeEvent>(OnMeleeRequiresSkillAttemptMelee);
@@ -187,6 +189,22 @@ public sealed class SkillsSystem : EntitySystem
         {
             var msg = Loc.GetString("rmc-skills-no-training", ("target", ent));
             _popup.PopupClient(msg, args.User, PopupType.SmallCaution);
+            args.Cancel();
+        }
+    }
+
+    private void OnRequiresSkillBoundUIAttempt(Entity<RequiresSkillComponent> ent, ref BoundUserInterfaceMessageAttempt args)
+    {
+        if (args.Cancelled)
+            return;
+
+        if (HasComp<GhostComponent>(args.Actor))
+            return;
+
+        if (!HasAllSkills(args.Actor, ent.Comp.Skills))
+        {
+            var msg = Loc.GetString("rmc-skills-no-training", ("target", ent));
+            _popup.PopupClient(msg, args.Actor, PopupType.SmallCaution);
             args.Cancel();
         }
     }

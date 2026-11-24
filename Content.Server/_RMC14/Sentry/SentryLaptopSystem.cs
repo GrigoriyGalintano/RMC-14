@@ -45,13 +45,16 @@ public sealed class SentryLaptopSystem : SharedSentryLaptopSystem
 
         SubscribeLocalEvent<SentryLaptopComponent, AfterActivatableUIOpenEvent>(OnUIOpened);
         SubscribeLocalEvent<SentryLaptopComponent, BoundUIOpenedEvent>(OnBoundUIOpened);
-        SubscribeLocalEvent<SentryLaptopComponent, SentryLaptopViewCameraBuiMsg>(OnViewCameraMsg);
-        SubscribeLocalEvent<SentryLaptopComponent, SentryLaptopSetNameBuiMsg>(OnSetNameMsg);
-        SubscribeLocalEvent<SentryLaptopComponent, SentryLaptopGlobalToggleFactionBuiMsg>(OnGlobalToggleFactionMsg);
-        SubscribeLocalEvent<SentryLaptopComponent, SentryLaptopGlobalSetFactionsBuiMsg>(OnGlobalSetFactionsMsg);
-        SubscribeLocalEvent<SentryLaptopComponent, SentryLaptopGlobalResetTargetingBuiMsg>(OnGlobalResetTargetingMsg);
-        SubscribeLocalEvent<SentryLaptopComponent, SentryLaptopGlobalTogglePowerBuiMsg>(OnGlobalTogglePowerMsg);
-        SubscribeLocalEvent<SentryLaptopComponent, SentryLaptopCloseCameraBuiMsg>(OnCloseCameraMsg);
+        Subs.BuiEvents<SentryLaptopComponent>(SentryLaptopUiKey.Key, subs =>
+        {
+            subs.Event<SentryLaptopViewCameraBuiMsg>(OnViewCameraMsg);
+            subs.Event<SentryLaptopSetNameBuiMsg>(OnSetNameMsg);
+            subs.Event<SentryLaptopGlobalToggleFactionBuiMsg>(OnGlobalToggleFactionMsg);
+            subs.Event<SentryLaptopGlobalSetFactionsBuiMsg>(OnGlobalSetFactionsMsg);
+            subs.Event<SentryLaptopGlobalResetTargetingBuiMsg>(OnGlobalResetTargetingMsg);
+            subs.Event<SentryLaptopGlobalTogglePowerBuiMsg>(OnGlobalTogglePowerMsg);
+            subs.Event<SentryLaptopCloseCameraBuiMsg>(OnCloseCameraMsg);
+        });
         SubscribeLocalEvent<SentryLaptopComponent, BoundUIClosedEvent>(OnBoundUIClosed);
         SubscribeLocalEvent<SentryComponent, ComponentShutdown>(OnSentryShutdown);
 
@@ -157,14 +160,14 @@ public sealed class SentryLaptopSystem : SharedSentryLaptopSystem
         if (!GetLinkedSentries(laptop).Contains(sentryUid.Value))
             return;
 
-        var name = args.Name.Trim();
+        var name = args.Name.AsSpan().Trim();
         if (name.Length > 50)
             name = name[..50];
 
-        if (string.IsNullOrWhiteSpace(name))
+        if (name.IsEmpty)
             laptop.Comp.SentryCustomNames.Remove(sentryUid.Value);
         else
-            laptop.Comp.SentryCustomNames[sentryUid.Value] = name;
+            laptop.Comp.SentryCustomNames[sentryUid.Value] = name.ToString();
 
         Dirty(laptop);
         UpdateUI(laptop);
@@ -183,6 +186,9 @@ public sealed class SentryLaptopSystem : SharedSentryLaptopSystem
 
     private void OnGlobalSetFactionsMsg(Entity<SentryLaptopComponent> laptop, ref SentryLaptopGlobalSetFactionsBuiMsg args)
     {
+        if (!AreValidLaptopFactions(args.Factions))
+            return;
+
         var factionSet = args.Factions.ToHashSet();
 
         foreach (var sentryUid in GetLinkedSentries(laptop))

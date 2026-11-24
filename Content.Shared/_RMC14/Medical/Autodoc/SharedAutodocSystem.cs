@@ -1,5 +1,3 @@
-using Content.Shared._RMC14.Marines.Skills;
-using Content.Shared._RMC14.Movement;
 using Content.Shared.Administration.Logs;
 using Content.Shared.Containers;
 using Content.Shared.Damage;
@@ -9,6 +7,9 @@ using Content.Shared.Interaction;
 using Content.Shared.Movement.Events;
 using Content.Shared.Popups;
 using Content.Shared.UserInterface;
+using Content.Shared._RMC14.Marines.Skills;
+using Content.Shared._RMC14.Movement;
+using Content.Shared._RMC14.UserInterface;
 using Robust.Shared.Audio.Systems;
 using Robust.Shared.Containers;
 using Robust.Shared.Network;
@@ -28,6 +29,7 @@ public abstract class SharedAutodocSystem : EntitySystem
     [Dependency] private readonly SharedPopupSystem _popup = default!;
     [Dependency] private readonly IRobustRandom _random = default!;
     [Dependency] private readonly RMCMovementSystem _rmcMovement = default!;
+    [Dependency] private readonly RMCUserInterfaceSystem _rmcUI = default!;
     [Dependency] private readonly SkillsSystem _skills = default!;
     [Dependency] private readonly IGameTiming _timing = default!;
     [Dependency] private readonly SharedTransformSystem _transform = default!;
@@ -46,9 +48,18 @@ public abstract class SharedAutodocSystem : EntitySystem
         SubscribeLocalEvent<AutodocComponent, DragDropTargetEvent>(OnAutodocDragDropTarget, before: [typeof(DragInsertContainerSystem)]);
 
         SubscribeLocalEvent<AutodocConsoleComponent, ActivatableUIOpenAttemptEvent>(OnConsoleUIOpenAttempt);
+        SubscribeLocalEvent<AutodocConsoleComponent, BoundUserInterfaceMessageAttempt>(OnConsoleUIMessageAttempt);
         SubscribeLocalEvent<AutodocConsoleComponent, InteractUsingEvent>(OnConsoleInteractUsing);
 
         SubscribeLocalEvent<InsideAutodocComponent, MoveInputEvent>(OnInsideAutodocMoveInput);
+    }
+
+    private void OnConsoleUIMessageAttempt(
+        Entity<AutodocConsoleComponent> ent,
+        ref BoundUserInterfaceMessageAttempt args)
+    {
+        if (args.UiKey is AutodocUIKey.Key && !_rmcUI.CanUseUI(args))
+            args.Cancel();
     }
 
     private void OnAutodocInit(Entity<AutodocComponent> autodoc, ref ComponentInit args)

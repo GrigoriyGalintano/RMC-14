@@ -16,6 +16,7 @@ using Content.Shared._RMC14.Rules;
 using Content.Shared.Coordinates;
 using Content.Shared.Damage;
 using Content.Shared.GameTicking;
+using Content.Shared.Ghost;
 using Content.Shared.Maps;
 using Content.Shared.Popups;
 using Content.Shared.Storage.Components;
@@ -29,6 +30,10 @@ using Robust.Shared.Network;
 using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
+
+using Content.Shared._RMC14.UserInterface;
+
+using Content.Shared._RMC14.Xenonids;
 
 namespace Content.Shared._RMC14.SupplyDrop;
 
@@ -54,6 +59,7 @@ public abstract class SharedSupplyDropSystem : EntitySystem
     [Dependency] private readonly RMCCameraShakeSystem _rmcCameraShake = default!;
     [Dependency] private readonly RMCMapSystem _rmcMap = default!;
     [Dependency] private readonly RMCPlanetSystem _rmcPlanet = default!;
+    [Dependency] private readonly RMCUserInterfaceSystem _rmcUi = default!;
     [Dependency] private readonly IGameTiming _timing = default!;
     [Dependency] private readonly SharedTransformSystem _transform = default!;
     [Dependency] private readonly RMCPullingSystem _rmcpulling = default!;
@@ -69,6 +75,7 @@ public abstract class SharedSupplyDropSystem : EntitySystem
     public override void Initialize()
     {
         SubscribeLocalEvent<RoundRestartCleanupEvent>(OnRoundRestartCleanup);
+        SubscribeLocalEvent<SupplyDropComputerComponent, BoundUserInterfaceMessageAttempt>(OnUIMessageAttempt);
 
         SubscribeLocalEvent<BeingSupplyDroppedComponent, StorageOpenAttemptEvent>(OnBeingSupplyDroppedOpenAttempt);
         SubscribeLocalEvent<BeingSupplyDroppedComponent, ParaDropFinishedEvent>(OnBeingSupplyDroppedLanded);
@@ -83,6 +90,18 @@ public abstract class SharedSupplyDropSystem : EntitySystem
                 subs.Event<SupplyDropComputerUpdateBuiMsg>(OnSupplyDropComputerUpdateMsg);
                 subs.Event<SupplyDropComputerLaunchBuiMsg>(OnSupplyDropComputerLaunchMsg);
             });
+    }
+
+    private void OnUIMessageAttempt(Entity<SupplyDropComputerComponent> ent, ref BoundUserInterfaceMessageAttempt args)
+    {
+        if (args.Cancelled || args.UiKey is not SupplyDropComputerUi)
+            return;
+
+        if (!_rmcUi.CanUseUI(args) ||
+            HasComp<XenoComponent>(args.Actor) && !HasComp<GhostComponent>(args.Actor))
+        {
+            args.Cancel();
+        }
     }
 
     private void OnRoundRestartCleanup(RoundRestartCleanupEvent ev)

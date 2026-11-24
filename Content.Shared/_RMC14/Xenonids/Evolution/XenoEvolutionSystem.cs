@@ -6,6 +6,7 @@ using Content.Shared._RMC14.Xenonids.Banish;
 using Content.Shared._RMC14.Xenonids.Egg;
 using Content.Shared._RMC14.Xenonids.Hive;
 using Content.Shared._RMC14.Xenonids.JoinXeno;
+using Content.Shared._RMC14.Xenonids.Strain;
 using Content.Shared._RMC14.Xenonids.Weeds;
 using Content.Shared.Actions;
 using Content.Shared.Administration.Logs;
@@ -24,6 +25,7 @@ using Content.Shared.GameTicking.Components;
 using Content.Shared.Hands.EntitySystems;
 using Content.Shared.Jittering;
 using Content.Shared.Mind;
+using Content.Shared.Mind.Components;
 using Content.Shared.Mobs;
 using Content.Shared.Mobs.Components;
 using Content.Shared.Mobs.Systems;
@@ -112,6 +114,7 @@ public sealed class XenoEvolutionSystem : EntitySystem
 
         SubscribeLocalEvent<XenoOvipositorChangedEvent>(OnOvipositorChanged);
 
+        SubscribeLocalEvent<XenoRaffleCandidateComponent, MindRemovedMessage>(OnRaffleCandidateMindRemoved);
         SubscribeLocalEvent<XenoRaffleCandidateComponent, MobStateChangedEvent>(OnRaffleCandidateMobStateChanged);
 
         Subs.BuiEvents<XenoEvolutionComponent>(XenoEvolutionUIKey.Key,
@@ -175,6 +178,9 @@ public sealed class XenoEvolutionSystem : EntitySystem
         _ui.CloseUi(xeno.Owner, XenoEvolutionUIKey.Key, actor);
 
         if (_net.IsClient)
+            return;
+
+        if (args.Actor != xeno.Owner)
             return;
 
         if (ShouldRaffle(xeno, args.Choice))
@@ -242,6 +248,9 @@ public sealed class XenoEvolutionSystem : EntitySystem
         if (_net.IsClient)
             return;
 
+        if (args.Actor != xeno.Owner)
+            return;
+
         if (!xeno.Comp.Strains.Contains(args.Choice))
         {
             Log.Warning($"{ToPrettyString(actor)} sent an invalid strain choice: {args.Choice}.");
@@ -271,7 +280,16 @@ public sealed class XenoEvolutionSystem : EntitySystem
 
     private void OnXenoDevolveBui(Entity<XenoDevolveComponent> xeno, ref XenoDevolveBuiMsg args)
     {
-        _ui.CloseUi(xeno.Owner, XenoEvolutionUIKey.Key, xeno);
+        if (_net.IsClient)
+            return;
+
+        if (args.Actor != xeno.Owner)
+            return;
+
+        if (!_ui.IsUiOpen(xeno.Owner, XenoDevolveUIKey.Key, args.Actor))
+            return;
+
+        _ui.CloseUi(xeno.Owner, XenoDevolveUIKey.Key, args.Actor);
         TryDevolve(xeno, args.Choice);
     }
 
@@ -280,16 +298,29 @@ public sealed class XenoEvolutionSystem : EntitySystem
         if (_net.IsClient || args.Handled)
             return;
 
+        var candidate = CompOrNull<XenoRaffleCandidateComponent>(xeno);
+        if (args.Raffle)
+        {
+            if (candidate == null || !candidate.Evolving || candidate.Target != args.Choice ||
+                candidate.EvolutionEvent != args)
+            {
+                return;
+            }
+
+            candidate.EvolutionDoAfter = null;
+            candidate.EvolutionEvent = null;
+        }
+
         var valid = !args.Cancelled &&
                     _mind.TryGetMind(xeno, out _, out _) &&
                     CanEvolvePopup(xeno, args.Choice, ignoreEvolvesTo: args.IgnoreEvolvesTo);
 
         if (!valid)
         {
-            if (TryComp(xeno, out XenoRaffleCandidateComponent? interrupted) && interrupted.Evolving)
+            if (args.Raffle && candidate != null)
             {
-                interrupted.Evolving = false;
-                Dirty(xeno, interrupted);
+                candidate.Evolving = false;
+                Dirty(xeno, candidate);
                 if (_xenoHive.GetHive(xeno.Owner) is { } candHive)
                     RefreshRaffleUi(candHive);
             }
@@ -299,7 +330,7 @@ public sealed class XenoEvolutionSystem : EntitySystem
 
         args.Handled = true;
 
-        var wonRaffle = TryComp(xeno, out XenoRaffleCandidateComponent? won) && won.Target.Id == args.Choice.Id;
+        var wonRaffle = args.Raffle;
 
         var newXeno = TransferXeno(xeno, args.Choice);
         var ev = new NewXenoEvolvedEvent(xeno, newXeno, true);
@@ -684,9 +715,18 @@ public sealed class XenoEvolutionSystem : EntitySystem
         LeaveRaffle(ent.Owner);
     }
 
+    private void OnRaffleCandidateMindRemoved(Entity<XenoRaffleCandidateComponent> ent, ref MindRemovedMessage args)
+    {
+        if (!_net.IsClient && !TerminatingOrDeleted(ent))
+            LeaveRaffle(ent.Owner);
+    }
+
     private void OnXenoJoinRaffleBui(Entity<XenoEvolutionComponent> xeno, ref XenoJoinRaffleBuiMsg args)
     {
         if (_net.IsClient)
+            return;
+
+        if (args.Actor != xeno.Owner)
             return;
 
         TryEnterRaffle(xeno, args.Choice);
@@ -694,8 +734,27 @@ public sealed class XenoEvolutionSystem : EntitySystem
 
     private bool TryEnterRaffle(Entity<XenoEvolutionComponent> xeno, EntProtoId target)
     {
+        if (!_mobState.IsAlive(xeno) || !_mind.TryGetMind(xeno, out _, out _))
+            return false;
+
+        if (TryComp(xeno, out XenoRaffleCandidateComponent? current))
+        {
+            if (current.Evolving)
+                return false;
+
+            if (current.Target == target)
+                return true;
+        }
+
         if (!_prototypes.TryIndex(target, out var proto) ||
             !proto.TryGetComponent(out XenoComponent? targetXeno, _compFactory))
+        {
+            return false;
+        }
+
+        if (proto.Abstract ||
+            proto.HasComponent<XenoStrainComponent>(_compFactory) ||
+            proto.HasComponent<XenoHiddenComponent>(_compFactory))
         {
             return false;
         }
@@ -711,6 +770,7 @@ public sealed class XenoEvolutionSystem : EntitySystem
         cand.Target = target;
         cand.Tier = targetXeno.Tier;
         cand.Leapfrog = leapfrog;
+        cand.GraceUntil = null;
 
         cand.RaffleCost = leapfrog ? ComputeLeapfrogCost(xeno, target) : FixedPoint2.Zero;
         cand.RaffleProgress = FixedPoint2.Min(xeno.Comp.Points, cand.RaffleCost);
@@ -809,14 +869,22 @@ public sealed class XenoEvolutionSystem : EntitySystem
         if (_net.IsClient)
             return;
 
+        if (args.Actor != xeno.Owner)
+            return;
+
         LeaveRaffle(xeno.Owner);
     }
 
     private void LeaveRaffle(EntityUid xeno)
     {
+        if (!TryComp(xeno, out XenoRaffleCandidateComponent? candidate))
+            return;
+
+        var doAfter = candidate.EvolutionDoAfter;
         if (!RemComp<XenoRaffleCandidateComponent>(xeno))
             return;
 
+        _doAfter.Cancel(doAfter);
         if (_xenoHive.GetHive(xeno) is { } hive)
             RefreshRaffleUi(hive);
     }
@@ -1059,16 +1127,30 @@ public sealed class XenoEvolutionSystem : EntitySystem
         var ev = new XenoEvolutionDoAfterEvent(cand.Comp.Target)
         {
             IgnoreEvolvesTo = cand.Comp.Leapfrog,
+            Raffle = true,
         };
         var doAfter = new DoAfterArgs(EntityManager, cand.Owner, evo.Comp.EvolutionDelay, ev, cand.Owner)
         {
             BreakOnRest = false,
         };
 
-        if (!_doAfter.TryStartDoAfter(doAfter))
+        cand.Comp.Evolving = true;
+        cand.Comp.EvolutionEvent = ev;
+        if (!_doAfter.TryStartDoAfter(doAfter, out var doAfterId))
+        {
+            cand.Comp.Evolving = false;
+            cand.Comp.EvolutionEvent = null;
+            Dirty(cand);
+            return false;
+        }
+
+        if (ev.Handled)
+            return true;
+
+        if (cand.Comp.EvolutionEvent != ev)
             return false;
 
-        cand.Comp.Evolving = true;
+        cand.Comp.EvolutionDoAfter = doAfterId;
         cand.Comp.GraceUntil = null;
         Dirty(cand);
 
@@ -1316,6 +1398,13 @@ public sealed class XenoEvolutionSystem : EntitySystem
         var newXeno = Spawn(proto, coordinates);
         _xenoHive.SetSameHive(xeno, newXeno);
 
+        var raffleChanged = false;
+        if (TryComp(xeno, out XenoRaffleCandidateComponent? candidate))
+        {
+            raffleChanged = candidate.Target != proto && !TryCarryRaffleEntry(xeno, candidate, newXeno);
+            LeaveRaffle(xeno);
+        }
+
         RemComp<CanBeLarvaQueuedComponent>(xeno);
 
         if (_mind.TryGetMind(xeno, out var mindId, out _))
@@ -1324,13 +1413,8 @@ public sealed class XenoEvolutionSystem : EntitySystem
             _mind.UnVisit(mindId);
         }
 
-        if (TryComp(xeno, out XenoRaffleCandidateComponent? candidate))
-        {
-            if (candidate.Target.Id != proto.Id && !TryCarryRaffleEntry(xeno, candidate, newXeno))
-                _popup.PopupEntity(Loc.GetString("rmc-xeno-evolution-raffle-left-changed"), newXeno, newXeno, PopupType.MediumCaution);
-
-            LeaveRaffle(xeno);
-        }
+        if (raffleChanged)
+            _popup.PopupEntity(Loc.GetString("rmc-xeno-evolution-raffle-left-changed"), newXeno, newXeno, PopupType.MediumCaution);
 
         foreach (var held in _hands.EnumerateHeld(xeno))
         {

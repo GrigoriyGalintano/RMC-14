@@ -1,4 +1,5 @@
-﻿using Content.Shared._RMC14.Construction.Prototypes;
+﻿using Content.Shared.Hands.EntitySystems;
+using Content.Shared._RMC14.Construction.Prototypes;
 using Content.Shared._RMC14.Dropship;
 using Content.Shared._RMC14.Vehicle;
 using Content.Shared._RMC14.Emplacements;
@@ -31,6 +32,7 @@ public sealed class RMCConstructionSystem : EntitySystem
 {
     [Dependency] private readonly IComponentFactory _componentFactory = default!;
     [Dependency] private readonly FixtureSystem _fixture = default!;
+    [Dependency] private readonly SharedHandsSystem _hands = default!;
     [Dependency] private readonly SharedMapSystem _map = default!;
     [Dependency] private readonly TurfSystem _turf = default!;
     [Dependency] private readonly SharedPopupSystem _popup = default!;
@@ -122,10 +124,8 @@ public sealed class RMCConstructionSystem : EntitySystem
         if (_net.IsClient)
             return false;
 
-        if (amount <= 0)
-            return false;
-
-        if (!_prototype.TryIndex<RMCConstructionPrototype>(protoID, out var proto))
+        if (!_hands.IsHolding(user, ent) || !TryGetBuildable(ent, protoID, out var proto) ||
+            !TryGetMaterialCost(proto, amount, out var cost))
             return false;
 
         if (!TryComp(user, out TransformComponent? transform))
@@ -154,17 +154,11 @@ public sealed class RMCConstructionSystem : EntitySystem
             return false;
         }
 
-        if (proto.MaterialCost is { } materialCost && TryComp<StackComponent>(ent.Owner, out var stack))
+        if (TryComp<StackComponent>(ent, out var stack) ? stack.Count < cost : cost != 1)
         {
-            var totalAmount = amount / proto.Amount;
-            var cost = (amount == proto.Amount) ? materialCost : totalAmount * materialCost;
-
-            if (stack.Count < cost)
-            {
-                var message = Loc.GetString("rmc-construction-more-material", ("material", ent), ("object", proto.Name));
-                _popup.PopupEntity(message, user, user, PopupType.SmallCaution);
-                return false;
-            }
+            var message = Loc.GetString("rmc-construction-more-material", ("material", ent), ("object", proto.Name));
+            _popup.PopupEntity(message, user, user, PopupType.SmallCaution);
+            return false;
         }
 
         // TODO add the ability to combine materials
@@ -193,6 +187,55 @@ public sealed class RMCConstructionSystem : EntitySystem
         _doAfter.TryStartDoAfter(doAfter);
         UpdateStackAmountUI(ent);
         return true;
+    }
+
+    private static bool TryGetMaterialCost(RMCConstructionPrototype recipe, int amount, out int cost)
+    {
+        cost = 0;
+        if (recipe.Amount <= 0 || amount <= 0 || amount % recipe.Amount != 0 ||
+            amount != recipe.Amount && recipe.StackAmounts?.Contains(amount) != true)
+        {
+            return false;
+        }
+
+        var requested = (long) (amount / recipe.Amount) * (recipe.MaterialCost ?? 1);
+        if (requested is <= 0 or > int.MaxValue)
+            return false;
+
+        cost = (int) requested;
+        return true;
+    }
+
+    private bool TryGetBuildable(Entity<RMCConstructionItemComponent> ent,
+        ProtoId<RMCConstructionPrototype> id,
+        out RMCConstructionPrototype prototype)
+    {
+        prototype = default!;
+        if (ent.Comp.Buildable == null)
+            return false;
+
+        var pending = new Stack<ProtoId<RMCConstructionPrototype>>(ent.Comp.Buildable);
+        var visited = new HashSet<ProtoId<RMCConstructionPrototype>>();
+        while (pending.TryPop(out var next))
+        {
+            if (!visited.Add(next) || !_prototype.TryIndex(next, out var entry) || entry.IsDivider)
+                continue;
+
+            if (entry.Listed is { } listed)
+            {
+                foreach (var child in listed)
+                    pending.Push(child);
+                continue;
+            }
+
+            if (next != id)
+                continue;
+
+            prototype = entry;
+            return true;
+        }
+
+        return false;
     }
 
     private void OnConstructionPreventCollide(Entity<RMCConstructionPreventCollideComponent> ent, ref PreventCollideEvent args)
@@ -233,28 +276,39 @@ public sealed class RMCConstructionSystem : EntitySystem
         if (_net.IsClient)
             return;
 
-        var entry = args.Prototype;
+        if (TerminatingOrDeleted(ent) || !_hands.IsHolding(args.User, ent) ||
+            !TryGetBuildable(ent, args.Prototype.ID, out var entry) ||
+            !TryGetMaterialCost(entry, args.Amount, out var cost) ||
+            entry.Skill is { } skill && !_skills.HasSkill(args.User, skill, entry.RequiredSkillLevel))
+        {
+            return;
+        }
 
         var coordinates = GetCoordinates(args.Coordinates);
+        if (!entry.IgnoreBuildRestrictions && !CanBuildAt(coordinates, entry.Prototype, out _, direction: args.Direction,
+                collision: entry.RestrictedCollisionGroup, user: args.User) ||
+            entry.RestrictedTags is { } tags && _rmcMap.TileHasAnyTag(coordinates, tags))
+        {
+            return;
+        }
+
         args.Handled = true;
-
-        // If the stack amount is equal to the default amount, use the default material cost.
-        // Otherwise, use the material cost times the stack amount.
-        var totalAmount = args.Amount / entry.Amount; // So a stack of 20 with an amount of 4 and a cost of 1 is correctly 5 cost
-        var cost = (args.Amount == entry.Amount) ? entry.MaterialCost : totalAmount * entry.MaterialCost;
-
         if (TryComp<StackComponent>(ent.Owner, out var stack))
         {
-            if (!_stack.Use(ent.Owner, cost ?? 1, stack))
+            if (!_stack.Use(ent.Owner, cost, stack))
             {
                 var message = Loc.GetString("rmc-construction-more-material", ("material", ent.Owner), ("object", entry.Name));
                 _popup.PopupEntity(message, args.User, args.User, PopupType.SmallCaution);
                 return;
             }
         }
-        else if (_net.IsServer)
+        else if (cost == 1)
         {
-            QueueDel(ent.Owner);
+            Del(ent.Owner);
+        }
+        else
+        {
+            return;
         }
 
         if (!Deleted(ent))

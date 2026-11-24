@@ -185,6 +185,9 @@ public abstract partial class SharedCMSurgerySystem
     private void OnSurgeryTargetStepChosen(Entity<CMSurgeryTargetComponent> ent, ref CMSurgeryStepChosenBuiMsg args)
     {
         var user = args.Actor;
+        if (!_ui.IsUiOpen(ent.Owner, CMSurgeryUIKey.Key, user))
+            return;
+
         if (GetEntity(args.Entity) is not { Valid: true } body ||
             GetEntity(args.Part) is not { Valid: true } targetPart ||
             !IsSurgeryValid(body, targetPart, args.Surgery, args.Step, out var surgery, out var part, out var step))

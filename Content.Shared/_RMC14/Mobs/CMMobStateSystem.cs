@@ -77,6 +77,12 @@ public sealed class CMMobStateSystem : EntitySystem
 
     private void OnGhostActionBuiMsg(Entity<MobStateActionsComponent> ent, ref CMGhostActionBuiMsg args)
     {
+        if (args.Actor != ent.Owner)
+            return;
+
+        if (!_ui.IsUiOpen(ent.Owner, CMMobStateActionsUI.Key, args.Actor))
+            return;
+
         if (!_mobState.IsIncapacitated(ent))
             return;
 

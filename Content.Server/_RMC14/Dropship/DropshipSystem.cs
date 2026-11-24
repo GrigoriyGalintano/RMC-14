@@ -298,6 +298,15 @@ public sealed class DropshipSystem : SharedDropshipSystem
 
     private void OnNavigationLockout(Entity<DropshipNavigationComputerComponent> ent, ref DropshipLockoutDoAfterEvent args)
     {
+        if (args.Cancelled || args.Handled || !CanUseDropshipConsole(ent, args.User) ||
+            !ent.Comp.Hijackable || !HasComp<DropshipHijackerComponent>(args.User) ||
+            _timing.CurTime < ent.Comp.LockedOutUntil)
+        {
+            return;
+        }
+
+        args.Handled = true;
+
         ent.Comp.LockedOutUntil = _timing.CurTime + ent.Comp.LockoutDuration;
         ent.Comp.RemoteControl = false;
         Dirty(ent);
@@ -379,6 +388,9 @@ public sealed class DropshipSystem : SharedDropshipSystem
 
     public override bool FlyTo(Entity<DropshipNavigationComputerComponent> computer, EntityUid destination, EntityUid? user, bool hijack = false, float? startupTime = null, float? hyperspaceTime = null, bool offset = false)
     {
+        if (!hijack && _timing.CurTime < computer.Comp.LockedOutUntil)
+            return false;
+
         base.FlyTo(computer, destination, user, hijack, startupTime, hyperspaceTime);
 
         _hijack = hijack;

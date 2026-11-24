@@ -190,6 +190,9 @@ public sealed class XenoEggRoleSystem : EntitySystem
     private bool SharedChecks(EntityUid ent, EntityUid user)
     {
         //TODO RMC14 parasite bans should be checked here
+        if (!_ui.IsUiOpen(ent, XenoParasiteGhostUI.Key, user))
+            return false;
+
         _ui.CloseUi(ent, XenoParasiteGhostUI.Key);
 
         if (_actor.TryGetSession(user, out var session) &&

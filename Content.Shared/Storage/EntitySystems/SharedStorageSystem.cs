@@ -1024,13 +1024,39 @@ public abstract class SharedStorageSystem : EntitySystem
             {
                 return;
             }
+
+            // RMC14
+            if (!RMCStorage.CanEject(source, user.Value, out var popup))
+            {
+                _popupSystem.PopupClient(Loc.GetString(popup), source, user.Value);
+                return;
+            }
+            // RMC14
         }
         // RMC end
 
+        // RMC14
+        var inserted = false;
+        string? failure = null;
         foreach (var entity in entities.ToArray())
         {
-            Insert(target, entity, out _, user: user, targetComp, playSound: false);
+            if (!CanInsert(target, entity, user, out var reason, targetComp))
+            {
+                failure ??= reason;
+                continue;
+            }
+
+            inserted |= Insert(target, entity, out _, user: user, targetComp, playSound: false);
         }
+
+        if (!inserted)
+        {
+            if (user is { } actor && failure != null)
+                _popupSystem.PopupClient(Loc.GetString(failure), target, actor);
+
+            return;
+        }
+        // RMC14
         if (user != null
             && (!_tag.HasTag(user.Value, sourceComp.SilentStorageUserTag)
                 || !_tag.HasTag(user.Value, targetComp.SilentStorageUserTag)))
@@ -1082,6 +1108,14 @@ public abstract class SharedStorageSystem : EntitySystem
             && _stackQuery.TryGetComponent(insertEnt, out var stack)
             && HasSpaceInStacks((uid, storageComp), stack.StackTypeId))
         {
+            // RMC14
+            if (!RMCStorage.CanInsertStoreSkill((uid, storageComp, null), insertEnt, user, out var skillPopup))
+            {
+                reason = skillPopup;
+                return false;
+            }
+            // RMC14
+
             reason = null;
             return true;
         }

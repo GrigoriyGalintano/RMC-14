@@ -439,6 +439,15 @@ public sealed class HiveTeamSystem : EntitySystem
 
     private void OnSquadAnnounce(Entity<XenoComponent> xeno, ref HiveLeaderSquadAnnounceMsg args)
     {
+        if (args.Actor != xeno.Owner)
+            return;
+
+        if (!_ui.IsUiOpen(xeno.Owner, HiveLeaderSquadUIKey.Key, args.Actor))
+            return;
+
+        if (!HasComp<HiveLeaderComponent>(xeno.Owner))
+            return;
+
         if (string.IsNullOrWhiteSpace(args.Message))
             return;
 
@@ -490,6 +499,9 @@ public sealed class HiveTeamSystem : EntitySystem
         if (!TryGetEntity(xenoNet, out var xeno))
             return;
 
+        if (!_hive.FromSameHive(leaderUid, xeno.Value))
+            return;
+
         var teams = EnsureTeams(hive);
         var netXeno = GetNetEntity(xeno.Value);
 
@@ -530,20 +542,50 @@ public sealed class HiveTeamSystem : EntitySystem
 
     private void OnLeaderAddMember(Entity<XenoComponent> leader, ref HiveLeaderAddMemberMsg args)
     {
+        if (args.Actor != leader.Owner)
+            return;
+
+        if (!_ui.IsUiOpen(leader.Owner, HiveLeaderSquadUIKey.Key, args.Actor))
+            return;
+
+        if (!HasComp<HiveLeaderComponent>(leader.Owner))
+            return;
+
         AddMemberToLeaderTeam(leader.Owner, args.Xeno);
     }
 
     private void OnLeaderRemoveMember(Entity<XenoComponent> leader, ref HiveLeaderRemoveMemberMsg args)
     {
+        if (args.Actor != leader.Owner)
+            return;
+
+        if (!_ui.IsUiOpen(leader.Owner, HiveLeaderSquadUIKey.Key, args.Actor))
+            return;
+
+        if (!HasComp<HiveLeaderComponent>(leader.Owner))
+            return;
+
         RemoveMemberFromLeaderTeam(leader.Owner, args.Xeno);
     }
 
     private void OnSetLeader(Entity<XenoComponent> queen, ref HiveTeamSetLeaderMsg args)
     {
+        if (args.Actor != queen.Owner)
+            return;
+
+        if (!_ui.IsUiOpen(queen.Owner, HiveTeamUIKey.Key, args.Actor))
+            return;
+
+        if (!HasComp<HiveLeaderGranterComponent>(queen.Owner))
+            return;
+
         if (_hive.GetHive(queen.Owner) is not { } hive)
             return;
 
         if (!TryGetEntity(args.Xeno, out var xeno))
+            return;
+
+        if (!_hive.FromSameHive(queen.Owner, xeno.Value))
             return;
 
         var teams = EnsureTeams(hive);
@@ -577,6 +619,15 @@ public sealed class HiveTeamSystem : EntitySystem
 
     private void OnRemoveLeader(Entity<XenoComponent> queen, ref HiveTeamRemoveLeaderMsg args)
     {
+        if (args.Actor != queen.Owner)
+            return;
+
+        if (!_ui.IsUiOpen(queen.Owner, HiveTeamUIKey.Key, args.Actor))
+            return;
+
+        if (!HasComp<HiveLeaderGranterComponent>(queen.Owner))
+            return;
+
         if (_hive.GetHive(queen.Owner) is not { } hive)
             return;
 
@@ -592,10 +643,22 @@ public sealed class HiveTeamSystem : EntitySystem
 
     private void OnAddMember(Entity<XenoComponent> queen, ref HiveTeamAddMemberMsg args)
     {
+        if (args.Actor != queen.Owner)
+            return;
+
+        if (!_ui.IsUiOpen(queen.Owner, HiveTeamUIKey.Key, args.Actor))
+            return;
+
+        if (!HasComp<HiveLeaderGranterComponent>(queen.Owner))
+            return;
+
         if (_hive.GetHive(queen.Owner) is not { } hive)
             return;
 
         if (!TryGetEntity(args.Xeno, out var xeno))
+            return;
+
+        if (!_hive.FromSameHive(queen.Owner, xeno.Value))
             return;
 
         var teams = EnsureTeams(hive);
@@ -620,6 +683,15 @@ public sealed class HiveTeamSystem : EntitySystem
 
     private void OnRemoveMember(Entity<XenoComponent> queen, ref HiveTeamRemoveMemberMsg args)
     {
+        if (args.Actor != queen.Owner)
+            return;
+
+        if (!_ui.IsUiOpen(queen.Owner, HiveTeamUIKey.Key, args.Actor))
+            return;
+
+        if (!HasComp<HiveLeaderGranterComponent>(queen.Owner))
+            return;
+
         if (_hive.GetHive(queen.Owner) is not { } hive)
             return;
 
@@ -633,6 +705,15 @@ public sealed class HiveTeamSystem : EntitySystem
 
     private void OnSetRole(Entity<XenoComponent> queen, ref HiveTeamSetRoleMsg args)
     {
+        if (args.Actor != queen.Owner)
+            return;
+
+        if (!_ui.IsUiOpen(queen.Owner, HiveTeamUIKey.Key, args.Actor))
+            return;
+
+        if (!HasComp<HiveLeaderGranterComponent>(queen.Owner))
+            return;
+
         if (_hive.GetHive(queen.Owner) is not { } hive)
             return;
 

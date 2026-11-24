@@ -141,6 +141,11 @@ namespace Content.Server.Cargo.Systems
 
         private void OnApproveOrderMessage(EntityUid uid, CargoOrderConsoleComponent component, CargoConsoleApproveOrderMessage args)
         {
+            // RMC14
+            if (args.UiKey is not CargoConsoleUiKey.Orders)
+                return;
+            // RMC14
+
             if (args.Actor is not { Valid: true } player)
                 return;
 
@@ -310,6 +315,11 @@ namespace Content.Server.Cargo.Systems
 
         private void OnRemoveOrderMessage(EntityUid uid, CargoOrderConsoleComponent component, CargoConsoleRemoveOrderMessage args)
         {
+            // RMC14
+            if (args.UiKey is not CargoConsoleUiKey.Orders)
+                return;
+            // RMC14
+
             var station = _station.GetOwningStation(uid);
 
             if (component.Mode != CargoOrderConsoleMode.DirectOrder)
@@ -356,6 +366,11 @@ namespace Content.Server.Cargo.Systems
 
         private void OnAddOrderMessage(EntityUid uid, CargoOrderConsoleComponent component, CargoConsoleAddOrderMessage args)
         {
+            // RMC14
+            if (args.UiKey is not CargoConsoleUiKey.Orders)
+                return;
+            // RMC14
+
             if (args.Actor is not { Valid: true } player)
                 return;
 

@@ -13,6 +13,8 @@ public sealed partial class XenoEvolutionDoAfterEvent : DoAfterEvent
     [DataField]
     public bool IgnoreEvolvesTo;
 
+    public bool Raffle;
+
     public XenoEvolutionDoAfterEvent(EntProtoId choice)
     {
         Choice = choice;

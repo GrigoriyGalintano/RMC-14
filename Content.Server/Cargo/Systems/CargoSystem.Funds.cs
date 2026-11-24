@@ -1,6 +1,7 @@
 using System.Linq;
 using Content.Shared.Cargo.Components;
 using Content.Shared.CCVar;
+using Content.Shared.Cargo;
 using Content.Shared.Database;
 using Content.Shared.Emag.Systems;
 using Content.Shared.IdentityManagement;
@@ -26,6 +27,11 @@ public sealed partial class CargoSystem
 
     private void OnWithdrawFunds(Entity<CargoOrderConsoleComponent> ent, ref CargoConsoleWithdrawFundsMessage args)
     {
+        // RMC14
+        if (args.UiKey is not CargoConsoleUiKey.Orders)
+            return;
+        // RMC14
+
         if (_station.GetOwningStation(ent) is not { } station ||
             !TryComp<StationBankAccountComponent>(station, out var bank))
             return;
@@ -90,6 +96,11 @@ public sealed partial class CargoSystem
 
     private void OnToggleLimit(Entity<CargoOrderConsoleComponent> ent, ref CargoConsoleToggleLimitMessage args)
     {
+        // RMC14
+        if (args.UiKey is not CargoConsoleUiKey.Orders)
+            return;
+        // RMC14
+
         if (!_accessReaderSystem.FindAccessTags(args.Actor).Intersect(ent.Comp.RemoveLimitAccess).Any())
         {
             ConsolePopup(args.Actor, Loc.GetString("cargo-console-order-not-allowed"));

@@ -10,17 +10,28 @@ public abstract class SharedTacticalMapSystem : EntitySystem
     [Dependency] private readonly SharedUserInterfaceSystem _ui = default!;
 
     public int LineLimit { get; private set; }
+    public int LabelLimit { get; private set; }
+    public int LabelLengthLimit { get; private set; }
 
     public override void Initialize()
     {
         SubscribeLocalEvent<TacticalMapUserComponent, OpenTacticalMapActionEvent>(OnUserOpenAction);
         SubscribeLocalEvent<TacticalMapUserComponent, OpenTacMapAlertEvent>(OnUserOpenAlert);
+        SubscribeLocalEvent<TacticalMapUserComponent, BoundUserInterfaceMessageAttempt>(OnUserUIMessageAttempt);
 
-        Subs.CVar(_config, RMCCVars.RMCTacticalMapLineLimit, v => LineLimit = v, true);
+        Subs.CVar(_config, RMCCVars.RMCTacticalMapLineLimit, v => LineLimit = Math.Max(0, v), true);
+        Subs.CVar(_config, RMCCVars.RMCTacticalMapLabelLimit, v => LabelLimit = Math.Max(0, v), true);
+        Subs.CVar(_config, RMCCVars.RMCTacticalMapLabelLengthLimit, v => LabelLengthLimit = Math.Max(0, v), true);
 
         SubscribeLocalEvent<TacticalMapUserComponent, NewXenoEvolvedEvent>(OnXenoEvolve);
         SubscribeLocalEvent<TacticalMapUserComponent, XenoDevolvedEvent>(OnXenoDevolve);
         SubscribeLocalEvent<ReopenTacticalMapComponent, AfterNewXenoEvolvedEvent>(OnAfterXenoEvolve);
+    }
+
+    private void OnUserUIMessageAttempt(Entity<TacticalMapUserComponent> ent, ref BoundUserInterfaceMessageAttempt args)
+    {
+        if (args.UiKey is TacticalMapUserUi.Key && args.Actor != ent.Owner)
+            args.Cancel();
     }
 
     private void OnUserOpenAction(Entity<TacticalMapUserComponent> ent, ref OpenTacticalMapActionEvent args)

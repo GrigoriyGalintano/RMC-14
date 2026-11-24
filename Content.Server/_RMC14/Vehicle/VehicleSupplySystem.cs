@@ -1,20 +1,23 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using Content.Shared._RMC14.Intel.Tech;
-using Content.Shared._RMC14.Requisitions;
-using Content.Shared._RMC14.Requisitions.Components;
-using Content.Shared._RMC14.Vehicle;
-using Content.Shared._RMC14.Vehicle.Supply;
-using Content.Shared._RMC14.Vendors;
-using Content.Shared._RMC14.Weapons.Ranged.Ammo.BulletBox;
+using System;
 using Content.Shared.Containers.ItemSlots;
+using Content.Shared.Ghost;
+using Content.Shared.Interaction.Events;
 using Content.Shared.Mobs.Components;
 using Content.Shared.Physics;
 using Content.Shared.Tag;
-using Content.Shared.Vehicle.Components;
 using Content.Shared.UserInterface;
+using Content.Shared.Vehicle.Components;
+using Content.Shared._RMC14.Intel.Tech;
+using Content.Shared._RMC14.Requisitions.Components;
+using Content.Shared._RMC14.Requisitions;
+using Content.Shared._RMC14.UserInterface;
+using Content.Shared._RMC14.Vehicle.Supply;
+using Content.Shared._RMC14.Vehicle;
+using Content.Shared._RMC14.Vendors;
+using Content.Shared._RMC14.Weapons.Ranged.Ammo.BulletBox;
 using Robust.Server.Audio;
 using Robust.Server.GameObjects;
 using Robust.Shared.GameObjects;
@@ -39,6 +42,7 @@ public sealed class VehicleSupplySystem : EntitySystem
     [Dependency] private readonly PhysicsSystem _physics = default!;
     [Dependency] private readonly IPrototypeManager _prototypes = default!;
     [Dependency] private readonly SharedRequisitionsSystem _requisitions = default!;
+    [Dependency] private readonly RMCUserInterfaceSystem _rmcUI = default!;
     [Dependency] private readonly VehicleSystem _rmcVehicles = default!;
     [Dependency] private readonly IGameTiming _timing = default!;
     [Dependency] private readonly SharedTransformSystem _transform = default!;
@@ -67,6 +71,7 @@ public sealed class VehicleSupplySystem : EntitySystem
     {
         SubscribeLocalEvent<PrototypesReloadedEventArgs>(OnPrototypesReloaded);
         SubscribeLocalEvent<VehicleSupplyConsoleComponent, BeforeActivatableUIOpenEvent>(OnConsoleBeforeUiOpen);
+        SubscribeLocalEvent<VehicleSupplyConsoleComponent, BoundUserInterfaceMessageAttempt>(OnConsoleUIMessageAttempt);
         SubscribeLocalEvent<VehicleHardpointVendorComponent, MapInitEvent>(OnVendorMapInit);
         SubscribeLocalEvent<VehicleHardpointVendorComponent, BeforeActivatableUIOpenEvent>(OnVendorBeforeUiOpen);
         SubscribeLocalEvent<VehicleSupplyLiftComponent, MapInitEvent>(OnLiftMapInit);
@@ -81,6 +86,28 @@ public sealed class VehicleSupplySystem : EntitySystem
         SubscribeLocalEvent<TechUnlockVehicleEvent>(OnTechUnlockVehicle);
 
         ReloadHardpointItems();
+    }
+
+    private void OnConsoleUIMessageAttempt(
+        Entity<VehicleSupplyConsoleComponent> ent,
+        ref BoundUserInterfaceMessageAttempt args)
+    {
+        if (args.UiKey is not VehicleSupplyUIKey.Key)
+            return;
+
+        if (!_rmcUI.CanUseUI(args))
+        {
+            args.Cancel();
+            return;
+        }
+
+        if (HasComp<GhostComponent>(args.Actor))
+            return;
+
+        var attempt = new GettingInteractedWithAttemptEvent(args.Actor, ent);
+        RaiseLocalEvent(ent, ref attempt);
+        if (attempt.Cancelled)
+            args.Cancel();
     }
 
     private static string Normalize(string value)

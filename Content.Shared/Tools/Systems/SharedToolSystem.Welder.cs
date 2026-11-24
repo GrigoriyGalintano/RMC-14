@@ -150,8 +150,10 @@ public abstract partial class SharedToolSystem
 
     private void OnWelderDoAfter(Entity<WelderComponent> ent, ref ToolDoAfterEvent args)
     {
-        if (args.Cancelled)
+        // RMC14
+        if (args.Cancelled || !ItemToggle.IsActivated(ent.Owner))
             return;
+        // RMC14
 
         if (!SolutionContainerSystem.TryGetSolution(ent.Owner, ent.Comp.FuelSolutionName, out var solution))
             return;

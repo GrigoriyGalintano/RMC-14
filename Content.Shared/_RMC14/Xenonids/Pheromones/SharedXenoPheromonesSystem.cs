@@ -129,7 +129,8 @@ public abstract class SharedXenoPheromonesSystem : EntitySystem
 
     private void OnXenoPheromonesChosenBui(Entity<XenoPheromonesComponent> xeno, ref XenoPheromonesChosenBuiMsg args)
     {
-        if (!Enum.IsDefined(args.Pheromones))
+        if (args.Actor != xeno.Owner || !_ui.IsUiOpen(xeno.Owner, XenoPheromonesUI.Key, args.Actor) ||
+            !Enum.IsDefined(args.Pheromones))
             return;
 
         TryActivatePheromones(xeno, args.Pheromones);

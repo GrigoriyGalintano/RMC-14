@@ -54,6 +54,12 @@ public sealed class XenoWordQueenSystem : EntitySystem
 
     private void OnXenoWordQueenBui(Entity<XenoWordQueenComponent> queen, ref XenoWordQueenBuiMsg args)
     {
+        if (args.Actor != queen.Owner)
+            return;
+
+        if (!_ui.IsUiOpen(queen.Owner, XenoWordQueenUI.Key, args.Actor))
+            return;
+
         _ui.CloseUi(queen.Owner, XenoWordQueenUI.Key, queen);
 
         var text = args.Text.Trim();

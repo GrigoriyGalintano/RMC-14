@@ -22,6 +22,9 @@ public sealed class DialogSystem : EntitySystem
 
     private void OnDialogOption(Entity<DialogComponent> ent, ref DialogOptionBuiMsg args)
     {
+        if (ent.Comp.Actor != args.Actor)
+            return;
+
         _ui.CloseUi(ent.Owner, DialogUiKey.Key);
 
         var index = args.Index;
@@ -37,6 +40,9 @@ public sealed class DialogSystem : EntitySystem
 
     private void OnDialogInput(Entity<DialogComponent> ent, ref DialogInputBuiMsg args)
     {
+        if (ent.Comp.Actor != args.Actor)
+            return;
+
         _ui.CloseUi(ent.Owner, DialogUiKey.Key);
 
         if (ent.Comp.InputEvent == null)
@@ -50,6 +56,9 @@ public sealed class DialogSystem : EntitySystem
 
     private void OnDialogConfirm(Entity<DialogComponent> ent, ref DialogConfirmBuiMsg args)
     {
+        if (ent.Comp.Actor != args.Actor)
+            return;
+
         _ui.CloseUi(ent.Owner, DialogUiKey.Key);
 
         if (ent.Comp.ConfirmEvent != null)
@@ -58,7 +67,7 @@ public sealed class DialogSystem : EntitySystem
 
     private void OnDialogClosed(Entity<DialogComponent> ent, ref BoundUIClosedEvent args)
     {
-        if (_timing.ApplyingState)
+        if (_timing.ApplyingState || ent.Comp.Actor != args.Actor)
             return;
 
         RemComp<DialogComponent>(ent);
@@ -66,7 +75,11 @@ public sealed class DialogSystem : EntitySystem
 
     public void OpenOptions(EntityUid target, EntityUid actor, string title, List<DialogOption> options, string message = "", bool enableSearch = true)
     {
+        if (TryComp(target, out DialogComponent? previous) && previous.Actor != actor && previous.Actor is { } previousActor)
+            _ui.CloseUi(target, DialogUiKey.Key, previousActor);
+
         var dialog = EnsureComp<DialogComponent>(target);
+        dialog.Actor = actor;
         dialog.Title = title;
         dialog.Message = new DialogOption(message);
         dialog.DialogType = DialogType.Options;
@@ -84,7 +97,11 @@ public sealed class DialogSystem : EntitySystem
 
     public void OpenInput(EntityUid target, EntityUid actor, string message, DialogInputEvent? ev, bool largeInput = false, int characterLimit = 200, int minCharacterLimit = 0, bool smartCheck = false, bool autoFocus = true)
     {
+        if (TryComp(target, out DialogComponent? previous) && previous.Actor != actor && previous.Actor is { } previousActor)
+            _ui.CloseUi(target, DialogUiKey.Key, previousActor);
+
         var dialog = EnsureComp<DialogComponent>(target);
+        dialog.Actor = actor;
         dialog.DialogType = DialogType.Input;
         dialog.Message = new DialogOption(message, ev);
         dialog.InputEvent = ev;
@@ -106,7 +123,11 @@ public sealed class DialogSystem : EntitySystem
 
     public void OpenConfirmation(EntityUid target, EntityUid actor, string title, string message, object ev)
     {
+        if (TryComp(target, out DialogComponent? previous) && previous.Actor != actor && previous.Actor is { } previousActor)
+            _ui.CloseUi(target, DialogUiKey.Key, previousActor);
+
         var dialog = EnsureComp<DialogComponent>(target);
+        dialog.Actor = actor;
         dialog.DialogType = DialogType.Confirm;
         dialog.Title = title;
         dialog.Message = new DialogOption(message, ev);

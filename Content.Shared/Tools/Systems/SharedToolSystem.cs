@@ -191,7 +191,9 @@ public abstract partial class SharedToolSystem : EntitySystem
             BreakOnMove = true,
             BreakOnWeightlessMove = false,
             NeedHand = tool != user,
-            AttemptFrequency = fuel > 0 ? AttemptFrequency.EveryTick : AttemptFrequency.Never,
+            // RMC14
+            AttemptFrequency = fuel > 0 || HasComp<WelderComponent>(tool) ? AttemptFrequency.EveryTick : AttemptFrequency.Never,
+            // RMC14
             DuplicateCondition = duplicateCondition,
             RootEntity = true, // RMC14
         };
