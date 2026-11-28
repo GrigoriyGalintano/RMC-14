@@ -20,7 +20,7 @@ using Robust.Shared.Utility;
 
 namespace Content.Shared._RMC14.Areas;
 
-public sealed partial class AreaSystem : EntitySystem
+public sealed class AreaSystem : EntitySystem
 {
     [Dependency] private readonly IComponentFactory _compFactory = default!;
     [Dependency] private readonly IConfigurationManager _config = default!;
@@ -38,6 +38,7 @@ public sealed partial class AreaSystem : EntitySystem
     [Dependency] private readonly SharedDropshipWeaponSystem _weapon = default!;
 
     private static readonly ProtoId<TagPrototype> WallTag = "Wall";
+    private static readonly Color DefaultMinimapColor = Color.FromHex("#6c6767d8");
 
     private EntityQuery<AreaComponent> _areaQuery;
     private EntityQuery<AreaGridComponent> _areaGridQuery;
@@ -81,6 +82,9 @@ public sealed partial class AreaSystem : EntitySystem
                 continue;
             _weapon.UpdateSignalFlareVisuals(foundEnt);
         }
+
+        var ev = new RoofingEntityChangedEvent(ent);
+        RaiseLocalEvent(ref ev);
     }
 
     private void OnRoofMapInit(Entity<RoofingEntityComponent> ent, ref MapInitEvent args)
@@ -126,6 +130,17 @@ public sealed partial class AreaSystem : EntitySystem
         areaGrid.Areas[position] = area;
 
         EnsureAreaEntityExists(areaGrid, area);
+    }
+
+    public bool TryGetAreaId(AreaGridComponent grid, Vector2i indices, out EntProtoId<AreaComponent> area)
+    {
+        return grid.Areas.TryGetValue(indices, out area);
+    }
+
+    public void RefreshMinimap(EntityUid grid)
+    {
+        if (!_toRender.Contains(grid))
+            _toRender.Add(grid);
     }
 
     public bool SetAlwaysPowered(Entity<AreaComponent> area, bool alwaysPowered)
@@ -420,6 +435,9 @@ public sealed partial class AreaSystem : EntitySystem
 
         roofing.Comp.CanOrbitalBombard = ob;
         Dirty(roofing);
+
+        var ev = new RoofingEntityChangedEvent(roofing);
+        RaiseLocalEvent(ref ev);
     }
 
     public string GetAreaName(EntityUid coordinates)
@@ -445,52 +463,12 @@ public sealed partial class AreaSystem : EntitySystem
                 areaGrid.Labels.Clear();
                 Dirty(ent, areaGrid);
 
-                var excludedBoundsAreas = new HashSet<EntProtoId<AreaComponent>>();
-                var excludedRenderAreas = new HashSet<EntProtoId<AreaComponent>>();
-                foreach (var (areaProto, areaEnt) in areaGrid.AreaEntities)
-                {
-                    if (!_areaQuery.TryComp(areaEnt, out var areaComp))
-                        continue;
-
-                    if (areaComp.ExcludeFromTacMapBounds)
-                        excludedBoundsAreas.Add(areaProto);
-
-                    if (areaComp.ExcludeFromTacMapRender)
-                        excludedRenderAreas.Add(areaProto);
-                }
-
-                var hasBounds = false;
-                var boundsMin = Vector2i.Zero;
-                var boundsMax = Vector2i.Zero;
-
                 var tiles = _map.GetAllTilesEnumerator(ent, mapGrid);
                 var areasOccupied = new Dictionary<EntProtoId<AreaComponent>, (int Resin, int Buildable)>();
                 while (tiles.MoveNext(out var tileRefNullable))
                 {
                     var tileRef = tileRefNullable.Value;
-                    if (tileRef.Tile.IsEmpty || _turf.IsSpace(tileRef))
-                        continue;
-
                     var pos = tileRef.GridIndices;
-                    if (!areaGrid.Areas.TryGetValue(pos, out var area))
-                        continue;
-
-                    var excludeRender = excludedRenderAreas.Contains(area);
-                    if (!excludedBoundsAreas.Contains(area))
-                    {
-                        if (!hasBounds)
-                        {
-                            boundsMin = pos;
-                            boundsMax = pos;
-                            hasBounds = true;
-                        }
-                        else
-                        {
-                            boundsMin = Vector2i.ComponentMin(boundsMin, pos);
-                            boundsMax = Vector2i.ComponentMax(boundsMax, pos);
-                        }
-                    }
-
                     var anchoredEnumerator = _map.GetAnchoredEntitiesEnumerator(ent, mapGrid, pos);
 
                     var found = false;
@@ -498,13 +476,13 @@ public sealed partial class AreaSystem : EntitySystem
                     var xenoConstruct = false;
                     while (anchoredEnumerator.MoveNext(out var anchored))
                     {
-                        if (!excludeRender && _minimapColorQuery.TryComp(anchored, out var minimapColor))
+                        if (_minimapColorQuery.TryComp(anchored, out var minimapColor))
                         {
                             areaGrid.Colors[pos] = minimapColor.Color;
                             found = true;
                         }
 
-                        if (!excludeRender && _areaLabelQuery.HasComp(anchored))
+                        if (_areaLabelQuery.HasComp(anchored))
                             areaGrid.Labels[pos] = _rmcWarp.GetName(anchored.Value) ?? Name(anchored.Value);
 
                         if (!invincibleWall && _tag.HasTag(anchored.Value, WallTag) && !_damageableQuery.HasComp(anchored.Value))
@@ -514,6 +492,7 @@ public sealed partial class AreaSystem : EntitySystem
                             xenoConstruct = true;
                     }
 
+                    areaGrid.Areas.TryGetValue(pos, out var area);
                     (int Resin, int Buildable)? areaOccupied = null;
                     if (xenoConstruct)
                     {
@@ -534,22 +513,15 @@ public sealed partial class AreaSystem : EntitySystem
                         continue;
 
                     var tile = _turf.GetContentTileDefinition(tileRef);
-                    if (!excludeRender && tile.MinimapColor != default)
-                    {
-                        areaGrid.Colors[pos] = tile.MinimapColor;
-                        continue;
-                    }
-
-                    if (!excludeRender &&
+                    var color = tile.MinimapColor != default ? tile.MinimapColor : DefaultMinimapColor;
+                    if (areaGrid.Areas.TryGetValue(pos, out area) &&
                         area.TryGet(out var areaComp, _prototypes, _compFactory) &&
                         areaComp.MinimapColor != default)
                     {
-                        areaGrid.Colors[pos] = areaComp.MinimapColor.WithAlpha(0.5f);
-                        continue;
+                        color = Color.InterpolateBetween(color, areaComp.MinimapColor, 0.5f);
                     }
 
-                    if (!excludeRender)
-                        areaGrid.Colors[pos] = Color.FromHex("#6c6767d8");
+                    areaGrid.Colors[pos] = color;
                 }
 
                 foreach (var (areaProto, (resin, buildable)) in areasOccupied)
@@ -565,20 +537,10 @@ public sealed partial class AreaSystem : EntitySystem
                     Dirty(area, areaComp);
                 }
 
-                if (hasBounds)
-                {
-                    areaGrid.HasTacMapBounds = true;
-                    areaGrid.TacMapBoundsMin = boundsMin;
-                    areaGrid.TacMapBoundsMax = boundsMax;
-                }
-                else
-                {
-                    areaGrid.HasTacMapBounds = false;
-                    areaGrid.TacMapBoundsMin = default;
-                    areaGrid.TacMapBoundsMax = default;
-                }
-
                 Dirty(ent, areaGrid);
+
+                var renderedEv = new AreaGridRenderedEvent();
+                RaiseLocalEvent(ent, ref renderedEv);
             }
         }
         finally

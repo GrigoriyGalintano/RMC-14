@@ -48,16 +48,18 @@
           Off: { state: sensor_off }
           On: { state: sensor_ }
   - type: SensorTower
-    revealForLayers: [Marines]
-    revealLayers: [Xenos]
-  - type: TacticalMapLayerTracked
-    layers: [Marines, Xenos]
   - type: TacticalMapTracked
+    factions: [UNMC, RMCXeno]
   - type: TacticalMapIcon
     icon:
       sprite: /Textures/_RMC14/Interface/map_blips.rsi
       state: sensor_tower
   - type: RMCMesonsNonviewable
+  - type: FixedIdentity
+    name: cm-chatsan-replacement-sensor-tower
+    whitelist:
+      components:
+      - Xeno
 
 - type: entity
   parent: RMCSensorTower
@@ -67,16 +69,6 @@
   - type: SensorTower
     state: On
     breakChance: 0
-
-- type: entity
-  parent: RMCSensorTower
-  id: RMCSensorTowerRangeTest
-  suffix: "On, Range 5, No break chance"
-  components:
-  - type: SensorTower
-    state: On
-    breakChance: 0
-    revealRange: 5
 
 - type: entity
   parent: RMCSensorTower

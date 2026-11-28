@@ -54,6 +54,8 @@
       - CMEncryptionKeyCommon
   - type: GrantAreaInfo
   - type: GrantTacMapAlert
+  - type: GrantTacticalMap
+    factions: [UNMC]
 
 - type: entity
   parent: RMCHeadsetShip
@@ -246,6 +248,7 @@
     - ChiefMilitaryPolice
     - MilitaryWarden
     - ProvostInspector
+    - FireteamLeader
 
 - type: entity
   parent: CMHeadsetMPO
@@ -262,6 +265,7 @@
     - ExecutiveOfficer
     - ChiefMilitaryPolice
     - MilitaryWarden
+    - FireteamLeader
 
 - type: entity
   parent: RMCHeadsetShip
@@ -294,6 +298,7 @@
     - AuxiliarySupportOfficer
     - MilitaryWarden
     - ProvostInspector
+    - FireteamLeader
 
 - type: entity
   parent: CMHeadsetCMP
@@ -309,6 +314,7 @@
     - AuxiliarySupportOfficer
     - ChiefMilitaryPolice
     - ProvostInspector
+    - FireteamLeader
 
 - type: entity
   parent: RMCHeadsetShip
@@ -500,7 +506,6 @@
     trackerModes:
     - ProvostMarshal
     - ProvostDeputyMarshal
-    - ProvostChiefInspector
     - ProvostInspector
 
 - type: entity

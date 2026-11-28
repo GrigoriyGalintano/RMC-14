@@ -1,8 +1,7 @@
-﻿using System.Linq;
+using System.Linq;
 using Content.Server.GameTicking;
 using Content.Server.Spawners.Components;
 using Content.Shared._RMC14.Rules;
-using Content.Shared._RMC14.TacticalMap;
 using Content.Shared.Coordinates;
 using Content.Shared.GameTicking;
 using Content.Shared.Preferences;
@@ -146,7 +145,7 @@ public sealed partial class CMDistressSignalRuleSystem
         int initialPlayerCount)
     {
         var priorities = Enum.GetValues<JobPriority>().Length;
-        var totalSurvivors = (int)Math.Clamp((int)Math.Round(initialPlayerCount / _marinesPerSurvivor), _minimumSurvivors, _maximumSurvivors);
+        var totalSurvivors = GetRoundstartSurvLimit(initialPlayerCount);
         var selected = 0;
 
         for (var i = priorities - 1; i >= 0; i--)
@@ -238,7 +237,6 @@ public sealed partial class CMDistressSignalRuleSystem
         if (!_mind.TryGetMind(playerId, out var mind))
             mind = _mind.CreateMind(playerId);
 
-        RemCompDeferred<TacticalMapUserComponent>(survivorMob);
         _mind.TransferTo(mind.Value, survivorMob);
         _roles.MindAddJobRole(mind.Value, jobPrototype: spawnAsJob);
         _playTime.PlayerRolesChanged(player);

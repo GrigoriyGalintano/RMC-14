@@ -1,14 +1,18 @@
 light_mode unshaded;
 
+uniform sampler2D overlay_texture;
+uniform highp vec2 overlay_scale;
+uniform lowp float overlay_strength;
+
 void fragment() {
-    highp vec2 pixel = FRAGCOORD.xy;
-    highp vec2 minorPosition = mod(pixel, 4.0);
-    highp vec2 majorPosition = mod(pixel, 16.0);
-    highp float minorLine = max(1.0 - step(1.0, minorPosition.x), 1.0 - step(1.0, minorPosition.y));
-    highp float majorLine = max(1.0 - step(1.0, majorPosition.x), 1.0 - step(1.0, majorPosition.y));
-    lowp vec3 tint = vec3(0.043, 0.106, 0.180);
-    lowp vec3 grid = mix(vec3(0.173, 0.310, 0.482), vec3(0.373, 0.549, 0.780), majorLine);
-    lowp float gridAlpha = max(minorLine * 0.07, majorLine * 0.12);
-    lowp float alpha = gridAlpha + 0.08 * (1.0 - gridAlpha);
-    COLOR = vec4((grid * gridAlpha + tint * 0.08 * (1.0 - gridAlpha)) / alpha, alpha);
+    lowp vec4 base = zTexture(UV);
+    if (base.a <= 0.0) {
+        COLOR = vec4(0.0);
+        return;
+    }
+
+    highp vec2 tileCoord = UV / TEXTURE_PIXEL_SIZE;
+    lowp vec4 overlay = texture2D(overlay_texture, fract(tileCoord * overlay_scale));
+    lowp float amount = clamp(overlay.a * overlay_strength, 0.0, 1.0);
+    COLOR = vec4(mix(base.rgb, overlay.rgb, amount), base.a);
 }

@@ -1,4 +1,6 @@
-﻿using Content.Shared._RMC14.Marines.Skills;
+﻿using Content.Shared._RMC14.Announce;
+using Content.Shared._RMC14.Marines.Skills;
+using Content.Shared.NPC.Prototypes;
 using Robust.Shared.GameStates;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
@@ -36,8 +38,29 @@ public sealed partial class MarineCommunicationsComputerComponent : Component
     [DataField, AutoNetworkedField]
     public bool CanInitiateEvac;
 
+    [DataField]
+    public EntProtoId<RMCAnnouncementPresetComponent>? AnnouncementOverlay = "RMCAnnouncementMarineCommand";
+
     [DataField, AutoNetworkedField]
     public string? AnnounceName;
+
+    [DataField, AutoNetworkedField]
+    public LocId? AnnounceAuthor;
+
+    [DataField, AutoNetworkedField]
+    public List<ProtoId<NpcFactionPrototype>> AnnounceFactions = new();
+
+    [DataField, AutoNetworkedField]
+    public bool CanDesignateLZ = true;
+
+    [DataField, AutoNetworkedField]
+    public string Planet = string.Empty;
+
+    [DataField, AutoNetworkedField]
+    public string Operation = string.Empty;
+
+    [DataField, AutoNetworkedField]
+    public List<LandingZone> LandingZones = new();
 
     /*
     [DataField, AutoNetworkedField]

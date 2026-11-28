@@ -1,149 +1,77 @@
-using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.Numerics;
-using System.Text;
 using Content.Shared._RMC14.TacticalMap;
 using Robust.Client.Graphics;
-using Robust.Shared.Localization;
-using Robust.Shared.Maths;
 
 namespace Content.Client._RMC14.TacticalMap.Controls;
 
 public sealed partial class TacticalMapControl
 {
-    private readonly Dictionary<int, string> _coordinateColumns = new();
-    private readonly Dictionary<int, string> _coordinateRows = new();
+    private readonly Dictionary<int, string> _columnNames = new();
+    private readonly Dictionary<int, string> _rowNames = new();
     private string _coordinateAlphabet = string.Empty;
+    private TacticalMapCoordinateGrid _publishedCoordinateGrid = TacticalMapCoordinateGrid.Default;
 
-    public TacticalMapCoordinateGrid CoordinateGrid { get; set; } = TacticalMapCoordinateGrid.Default;
+    public Vector2i MapSize => new(_width, _height);
 
-    public static string FormatCoordinateGridColumn(int column, string alphabet)
+    private float CoordinateHeaderSize => 18f * UIScale;
+
+    private TacticalMapCoordinateGrid GetCoordinateGrid()
     {
-        if (column < 0 || alphabet.Length < 2)
-            return string.Empty;
-
-        var label = new StringBuilder();
-        for (var index = column; index >= 0; index = index / alphabet.Length - 1)
-            label.Insert(0, alphabet[index % alphabet.Length]);
-
-        return label.ToString();
+        return Draft?.CoordinateGrid ?? _publishedCoordinateGrid;
     }
 
-    private float GetFittedMapScale(Vector2 availableSize)
+    private void DrawCoordinateGrid(DrawingHandleScreen handle, UIBox2 rect)
     {
-        var size = Texture?.Size ?? Vector2i.One;
-        if (CoordinateGrid.Enabled)
-            availableSize = Vector2.Max(Vector2.One, availableSize - new Vector2(GetCoordinateGridHeaderMargin() * 2f));
-        return Math.Min(availableSize.X / size.X, availableSize.Y / size.Y);
-    }
+        var grid = GetCoordinateGrid();
+        if (!grid.Enabled)
+            return;
 
-    private float GetCoordinateGridHeaderMargin()
-    {
-        return _font.GetLineHeight(UIScale) + 4f * UIScale;
-    }
-
-    private bool TryGetCoordinateGridView(Vector2 mapTopLeft, Vector2 mapSize,
-        out TacticalMapCoordinateGridLayout layout, out UIBox2 rectangle, out Vector2 cellPixels)
-    {
-        layout = default;
-        rectangle = default;
-        cellPixels = Vector2.Zero;
-        if (!CoordinateGrid.Enabled || Texture == null)
-            return false;
-
-        layout = TacticalMapCoordinateGridLayout.Create(Texture.Size, CoordinateGrid.CellSize);
-        cellPixels = layout.CellDimensions * (mapSize / new Vector2(Texture.Size.X, Texture.Size.Y));
-        rectangle = UIBox2.FromDimensions(mapTopLeft, mapSize);
-        return Math.Min(cellPixels.X, cellPixels.Y) >= GetCoordinateGridHeaderMargin();
-    }
-
-    private void DrawCoordinateGridBackground(DrawingHandleScreen handle, Vector2 mapTopLeft, Vector2 mapSize)
-    {
-        if (TryGetCoordinateGridView(mapTopLeft, mapSize, out _, out var rectangle, out _))
-            handle.DrawRect(rectangle, Color.Black.WithAlpha(0.4f));
-    }
-
-    private void DrawCoordinateGrid(DrawingHandleScreen handle, Vector2 mapTopLeft, Vector2 mapSize)
-    {
-        if (!TryGetCoordinateGridView(mapTopLeft, mapSize, out var layout, out var rectangle, out var cellPixels))
+        var layout = TacticalMapCoordinateGridLayout.Create(MapSize, grid.CellSize);
+        var cell = new Vector2(rect.Width / layout.Columns, rect.Height / layout.Rows);
+        if (cell.X < CoordinateHeaderSize || cell.Y < CoordinateHeaderSize)
             return;
 
         _coordinateGridShader.SetParameter("grid_cells", new Vector2(layout.Columns, layout.Rows));
-        _coordinateGridShader.SetParameter("cell_pixels", cellPixels);
+        _coordinateGridShader.SetParameter("cell_pixels", cell);
         handle.UseShader(_coordinateGridShader);
-        handle.DrawRect(rectangle, Color.White);
+        handle.DrawRect(rect, Color.White);
         handle.UseShader(null);
-    }
-
-    private void DrawCoordinateGridHeaders(DrawingHandleScreen handle, Vector2 mapTopLeft, Vector2 mapSize)
-    {
-        if (!TryGetCoordinateGridView(mapTopLeft, mapSize, out var layout, out var rectangle, out var cellPixels))
-            return;
-
-        var left = Math.Max(0f, rectangle.Left);
-        var top = Math.Max(0f, rectangle.Top);
-        var right = Math.Min(PixelWidth, rectangle.Right);
-        var bottom = Math.Min(PixelHeight, rectangle.Bottom);
-        if (right <= left || bottom <= top)
-            return;
 
         var alphabet = Loc.GetString("rmc-tactical-map-coordinate-grid-alphabet");
-        if (_coordinateAlphabet != alphabet)
+        if (alphabet != _coordinateAlphabet)
         {
             _coordinateAlphabet = alphabet;
-            _coordinateColumns.Clear();
-            _coordinateRows.Clear();
+            _columnNames.Clear();
         }
 
-        var padding = 2f * UIScale;
-        var headerMargin = GetCoordinateGridHeaderMargin();
-        var columnTop = Math.Max(0f, rectangle.Top - headerMargin) + padding;
-        var rowLeft = Math.Max(0f, rectangle.Left - headerMargin) + padding;
-        var firstColumn = Math.Max(0, (int) MathF.Floor((left - rectangle.Left) / cellPixels.X));
-        var lastColumn = Math.Min(layout.Columns - 1, (int) MathF.Floor((right - rectangle.Left) / cellPixels.X));
-        for (var column = firstColumn; column <= lastColumn; column++)
+        var font = GetLabelFont(1.5f);
+        for (var column = 0; column < layout.Columns && column < alphabet.Length; column++)
         {
-            if (!_coordinateColumns.TryGetValue(column, out var label))
-            {
-                label = FormatCoordinateGridColumn(column, alphabet);
-                _coordinateColumns[column] = label;
-            }
+            if (!_columnNames.TryGetValue(column, out var name))
+                _columnNames[column] = name = alphabet[column].ToString();
 
-            var textSize = handle.GetDimensions(_font, label, UIScale);
-            var centerX = rectangle.Left + (column + 0.5f) * cellPixels.X;
-            if (centerX - textSize.X / 2f < left + padding || centerX + textSize.X / 2f > right - padding)
-                continue;
-
-            DrawCoordinateGridHeader(handle, label,
-                new Vector2(centerX - textSize.X / 2f, columnTop), textSize, padding);
+            var x = rect.Left + (column + 0.5f) * cell.X;
+            if (x >= 0f && x < PixelWidth)
+                DrawCoordinateHeader(handle, font, new Vector2(x, Math.Max(0, rect.Top - CoordinateHeaderSize)), name);
         }
 
-        var firstRow = Math.Max(0, (int) MathF.Floor((top - rectangle.Top) / cellPixels.Y));
-        var lastRow = Math.Min(layout.Rows - 1, (int) MathF.Floor((bottom - rectangle.Top) / cellPixels.Y));
-        for (var row = firstRow; row <= lastRow; row++)
+        for (var row = 0; row < layout.Rows; row++)
         {
-            if (!_coordinateRows.TryGetValue(row, out var label))
-            {
-                label = (row + 1).ToString(CultureInfo.InvariantCulture);
-                _coordinateRows[row] = label;
-            }
+            if (!_rowNames.TryGetValue(row, out var name))
+                _rowNames[row] = name = (row + 1).ToString(CultureInfo.InvariantCulture);
 
-            var textSize = handle.GetDimensions(_font, label, UIScale);
-            var centerY = rectangle.Top + (row + 0.5f) * cellPixels.Y;
-            if (centerY - textSize.Y / 2f < top + padding || centerY + textSize.Y / 2f > bottom - padding)
-                continue;
-
-            DrawCoordinateGridHeader(handle, label,
-                new Vector2(rowLeft, centerY - textSize.Y / 2f), textSize, padding);
+            var y = rect.Top + (row + 0.5f) * cell.Y;
+            if (y >= 0f && y < PixelHeight)
+                DrawCoordinateHeader(handle, font, new Vector2(Math.Max(CoordinateHeaderSize / 2f, rect.Left - CoordinateHeaderSize / 2f), y), name);
         }
     }
 
-    private void DrawCoordinateGridHeader(DrawingHandleScreen handle, string label,
-        Vector2 position, Vector2 size, float padding)
+    private void DrawCoordinateHeader(DrawingHandleScreen handle, Font font, Vector2 center, string name)
     {
-        handle.DrawRect(UIBox2.FromDimensions(position - new Vector2(padding), size + new Vector2(padding * 2f)),
-            Color.Black.WithAlpha(0.65f));
-        handle.DrawString(_font, position, label, UIScale, Color.White.WithAlpha(0.85f));
+        var size = handle.GetDimensions(font, name, UIScale);
+        var position = center - new Vector2(size.X / 2f, 0);
+        handle.DrawRect(UIBox2.FromDimensions(position - Vector2.One, size + new Vector2(2)), Color.Black.WithAlpha(0.7f));
+        handle.DrawString(font, position, name, UIScale, Color.White);
     }
 }

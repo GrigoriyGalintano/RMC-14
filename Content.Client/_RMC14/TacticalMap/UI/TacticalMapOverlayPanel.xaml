@@ -1,0 +1,12 @@
+<ui:TacticalMapOverlayPanel
+    xmlns="https://spacestation14.io"
+    xmlns:ui="clr-namespace:Content.Client._RMC14.TacticalMap.UI"
+    xmlns:controls="clr-namespace:Content.Client._RMC14.TacticalMap.Controls"
+    Title="{Loc ui-tactical-map-section-overlays}">
+    <BoxContainer Orientation="Vertical" SeparationOverride="4" HorizontalExpand="True">
+        <controls:TacticalMapLabel Text="{Loc ui-tactical-map-section-roofs}" TextStyle="Heading" />
+        <BoxContainer Name="RoofList" Orientation="Vertical" SeparationOverride="3" HorizontalExpand="True" />
+        <controls:TacticalMapButton Name="LinkedLzButton" Text="{Loc ui-tactical-map-overlay-linked-lz}"
+                                    AlignLeft="True" HorizontalExpand="True" MinHeight="22" />
+    </BoxContainer>
+</ui:TacticalMapOverlayPanel>
